@@ -33,9 +33,10 @@ function ember.OnUpdate()
     end
 
     -- get the nearest enemy to cursor.
-	local enemy = Input.GetNearestUnitToCursor(Entity.GetTeamNum(myHero), Enum.TeamType.TEAM_ENEMY)
+	local enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(myHero), Enum.TeamType.TEAM_ENEMY)
 
-    if enemy ~= nil and NPC.IsEntityInRange(myHero, enemy, ember.chainsRadius) then
+    -- chains doesnt seem to use the hull radius.
+    if enemy ~= nil and NPC.IsPositionInRange(myHero, NPC.GetAbsOrigin(enemy), ember.chainsRadius, 0) then
     	Ability.CastNoTarget(fist)
     end
 end

@@ -7,21 +7,21 @@ ember.optionKey = Menu.AddKeyOption({ "Hero Specific","Ember"}, "Key", Enum.Butt
 ember.chainsRadius = 0
 
 function ember.OnUpdate()
-	if not Menu.IsEnabled(ember.optionEnable) then return end
-	if not Menu.IsKeyDown(ember.optionKey) then return end
-    
-	local myHero = Heroes.GetLocal()
+    if not Menu.IsEnabled(ember.optionEnable) then return end
+    if not Menu.IsKeyDown(ember.optionKey) then return end
 
-	if NPC.GetUnitName(myHero) ~= "npc_dota_hero_ember_spirit" then return end
+    local myHero = Heroes.GetLocal()
 
-	local punch = NPC.GetAbilityByIndex(myHero, 1)
-	local fist = NPC.GetAbilityByIndex(myHero, 0)
+    if NPC.GetUnitName(myHero) ~= "npc_dota_hero_ember_spirit" then return end
 
-	local mousePos = Input.GetWorldCursorPos()
+    local punch = NPC.GetAbilityByIndex(myHero, 1)
+    local fist = NPC.GetAbilityByIndex(myHero, 0)
+
+    local mousePos = Input.GetWorldCursorPos()
     local myMana = NPC.GetMana(myHero)
 
     if punch ~= nil and Ability.IsCastable(punch, myMana) then
-	    Ability.CastPosition(punch, mousePos)
+        Ability.CastPosition(punch, mousePos)
     end
 
     if fist == nil or not Ability.IsCastable(fist, myMana) then return end
@@ -33,11 +33,11 @@ function ember.OnUpdate()
     end
 
     -- get the nearest enemy to cursor.
-	local enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(myHero), Enum.TeamType.TEAM_ENEMY)
+    local enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(myHero), Enum.TeamType.TEAM_ENEMY)
 
     -- chains doesnt seem to use the hull radius.
     if enemy ~= nil and NPC.IsPositionInRange(myHero, NPC.GetAbsOrigin(enemy), ember.chainsRadius, 0) then
-    	Ability.CastNoTarget(fist)
+        Ability.CastNoTarget(fist)
     end
 end
 

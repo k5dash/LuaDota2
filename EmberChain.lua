@@ -53,24 +53,26 @@ function fistAndChain()
 end
 
 function dash()
-    if not Menu.IsKeyDown(ember.optionDashKey) then return end
+    if not Menu.IsKeyDownOnce(ember.optionDashKey) then return end
     local myHero = Heroes.GetLocal()
     if NPC.GetUnitName(myHero) ~= "npc_dota_hero_ember_spirit" then return end
 
     local putRen = NPC.GetAbilityByIndex(myHero, 4)
     local dash = NPC.GetAbilityByIndex(myHero, 3)
+    local flame = NPC.GetAbilityByIndex(myHero, 2)
 
     local mousePos = Input.GetWorldCursorPos()
     local myMana = NPC.GetMana(myHero)
 
     if putRen ~= nil and Ability.IsCastable(putRen, myMana) then
-        Ability.CastPosition(putRen, mousePos)
-        Ability.CastPosition(putRen, mousePos)
-        Ability.CastPosition(putRen, mousePos)
+        Ability.CastPosition(putRen, mousePos,true)
+        Ability.CastPosition(putRen, mousePos,true)
+        Ability.CastPosition(putRen, mousePos,true)
     end
 
     if dash == nil or not Ability.IsCastable(dash, myMana) then return end
-    Ability.CastPosition(dash, mousePos)
+    Ability.CastPosition(dash, mousePos,true)
+    Ability.CastNoTarget(flame,true)
 end
 
 return ember

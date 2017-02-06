@@ -1,6 +1,7 @@
 local ultimateHelper= {}
 
 ultimateHelper.optionEnable = Menu.AddOption({ "Utility","Black Hole Helper"}, "Enable", "Stop ultimate if no enemy in radius")
+ultimateHelper.optionMidNightPulseEnable = Menu.AddOption({ "Utility","Black Hole Helper"}, "Mid Night Pulse", "Use Mid Night Pulse")
 ultimateHelper.optionKey = Menu.AddKeyOption({ "Utility","Black Hole Helper"}, "Key",Enum.ButtonCode.KEY_P)
 
 ultimateHelper.ultiRadius = {enigma_black_hole = 420, magnataur_reverse_polarity = 410, faceless_void_chronosphere = 425}
@@ -12,7 +13,8 @@ function ultimateHelper.OnUpdate()
 
 	local myHero = Heroes.GetLocal()
 	if myHero == nill then return end
-
+    local ultimate = NPC.GetAbilityByIndex(myHero, 3)
+    if ultimate == nill or not Ability.IsReady(ultimate) then return end 
     local enemies = NPC.GetHeroesInRadius(myHero, 1500, Enum.TeamType.TEAM_ENEMY)
     local count = 0;
     local point = {}
@@ -42,13 +44,27 @@ function ultimateHelper.OnUpdate()
         end
     end 
 
+    if finalPos == nill or maxCount < 3 then return end
     ultimateHelper.renderHelper(finalPos, "CT")
     --ultimateHelper.renderHelper(ccs, "CC")
     --ultimateHelper.renderHelper(mid, "MD")
-    if finalPos == nill or maxCount < 3 then return end
-    ultimateHelper.castUltimate(myHero, finalPos)
-    
+    ultimateHelper.useItem(myHero)
+    ultimateHelper.castUltimate(myHero, finalPos) 
 end
+
+
+function ultimateHelper.useItem(myHero)
+    local myMana = NPC.GetMana(myHero)
+    local bkb = NPC.GetItem(myHero, "item_black_king_bar", true) 
+    if bkb ~= nill then
+        Ability.CastNoTarget(bkb,true)
+    end
+    local shivas = NPC.GetItem(myHero, "item_shivas_guard", true)
+    if shivas ~= nill and Ability.IsCastable(shivas, myMana)then
+        Ability.CastNoTarget(shivas,true)
+        myMana = NPC.GetMana(myHero)
+    end
+end 
 
 function ultimateHelper.processHeroes(myHero, hero1Pos, hero2Pos, hero3Pos)
 
@@ -82,7 +98,6 @@ function ultimateHelper.processHeroes(myHero, hero1Pos, hero2Pos, hero3Pos)
     end
     if ccsHeroCount >= centroidHeroCount and ccsHeroCount >= midCount then 
         Log.Write(centroidHeroCount)
-        local result ={}
         ultimateHelper.cache["pos"] = ccs
         ultimateHelper.cache["count"] = ccsHeroCount
         --Logs.Write(result["count"])
@@ -147,21 +162,30 @@ function ultimateHelper.circumCenter(a, b, c)
     return Vector(resultX, resultY, 0)
 end
 
-function ultimateHelper.castUltimate(myHero, ccs)
+function ultimateHelper.castUltimate(myHero, pos)
     local myMana = NPC.GetMana(myHero)
     local ulti = NPC.GetAbilityByIndex(myHero, 3)
     local dagger = NPC.GetItem(myHero, "item_blink", true) 
-    if dagger ~= nill and Ability.IsCastable(ulti, myMana) then
-        Ability.CastPosition(dagger, ccs)
+    if dagger ~= nill and Ability.IsCastable(ulti, myMana) and Ability.IsReady(dagger) then
+        if NPC.IsPositionInRange(myHero, pos, 1200, 0) then
+            Ability.CastPosition(dagger, pos)
+        else
+            local dir = pos - NPC.GetAbsOrigin(myHero)
+            dir:SetZ(0)
+            dir:Normalize()
+            dir:Scale(1199)
+            local destination = NPC.GetAbsOrigin(myHero) + dir
+
+            Ability.CastPosition(dagger, destination)
+        end 
     end 
 
     if ulti ~= nil and Ability.IsCastable(ulti, myMana) then
         local name =Ability.GetName(ulti)
-        Log.Write(name)
         if name == "enigma_black_hole" or name == "faceless_void_chronosphere" then
-            Ability.CastPosition(ulti, ccs)
+            Ability.CastPosition(ulti, pos, true)
         elseif name == "magnataur_reverse_polarity" then
-            Ability.CastNoTarget(ulti)
+            Ability.CastNoTarget(ulti,true)
         end
     end
 end 

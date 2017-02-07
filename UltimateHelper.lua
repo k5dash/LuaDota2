@@ -7,8 +7,6 @@ ultimateHelper.optionKey = Menu.AddKeyOption({ "Utility","Black Hole Helper"}, "
 ultimateHelper.ultiRadius = {enigma_black_hole = 420, magnataur_reverse_polarity = 410, faceless_void_chronosphere = 425}
 ultimateHelper.font = Renderer.LoadFont("Tahoma", 30, Enum.FontWeight.EXTRABOLD)
 ultimateHelper.cache = {}
-ultimateHelper.cache['midNightPulseCasted'] = false
-ultimateHelper.cache['blackHoleCasted'] = false
 function ultimateHelper.OnUpdate()
     if not Menu.IsEnabled(ultimateHelper.optionEnable) then return true end
     if not Menu.IsKeyDown(ultimateHelper.optionKey) then return end
@@ -16,10 +14,6 @@ function ultimateHelper.OnUpdate()
     local myHero = Heroes.GetLocal()
     if myHero == nill then return end
     local ultimate = NPC.GetAbilityByIndex(myHero, 3)
-    if ultimate ~= nill and Ability.GetCooldownTimeLeft(ultimate) >0 then
-        ultimateHelper.cache['midNightPulseCasted'] = false
-        ultimateHelper.cache['blackHoleCasted'] = false
-    end
     if ultimate == nill or not Ability.IsReady(ultimate) then return end 
     local enemies = NPC.GetHeroesInRadius(myHero, 1500, Enum.TeamType.TEAM_ENEMY)
     local count = 0;
@@ -62,11 +56,11 @@ end
 function ultimateHelper.useItem(myHero)
     local myMana = NPC.GetMana(myHero)
     local bkb = NPC.GetItem(myHero, "item_black_king_bar", true) 
-    if bkb ~= nill and Ability.IsReady(bkb) then
+    if bkb ~= nill then
         Ability.CastNoTarget(bkb,true)
     end
     local shivas = NPC.GetItem(myHero, "item_shivas_guard", true)
-    if shivas ~= nill and Ability.IsCastable(shivas, myMana) and Ability.IsReady(shivas) then
+    if shivas ~= nill and Ability.IsCastable(shivas, myMana)then
         Ability.CastNoTarget(shivas,true)
         myMana = NPC.GetMana(myHero)
     end
@@ -83,20 +77,27 @@ function ultimateHelper.processHeroes(myHero, hero1Pos, hero2Pos, hero3Pos)
     local ccsHeroCount = ultimateHelper.validateCenter(ccs,myHero)
     local midCount = ultimateHelper.validateCenter(mid,myHero)
 
+    Log.Write(centroidHeroCount)
+    Log.Write(ccsHeroCount)
+    Log.Write(midCount)
+
 
     if centroidHeroCount < 3 and ccsHeroCount < 3 and midCount < 3 then
-               ultimateHelper.cache["pos"] = nill
+        Log.Write(centroidHeroCount)
+        ultimateHelper.cache["pos"] = nill
         ultimateHelper.cache["count"] = 0
         --Logs.Write(result["count"])
         return r
     end
     if centroidHeroCount >= ccsHeroCount and centroidHeroCount >= midCount then 
+        Log.Write(centroidHeroCount)
         ultimateHelper.cache["pos"] = centroid
         --Logs.Write(centroidHeroCount)
         ultimateHelper.cache["count"] = centroidHeroCount
         return
     end
     if ccsHeroCount >= centroidHeroCount and ccsHeroCount >= midCount then 
+        Log.Write(centroidHeroCount)
         ultimateHelper.cache["pos"] = ccs
         ultimateHelper.cache["count"] = ccsHeroCount
         --Logs.Write(result["count"])
@@ -179,26 +180,13 @@ function ultimateHelper.castUltimate(myHero, pos)
         end 
     end 
 
-    local midNightPulse = NPC.GetAbilityByIndex(myHero, 2)
-
-    if midNightPulse ~= nill and Ability.IsCastable(midNightPulse, myMana) and Ability.GetName(midNightPulse) == "enigma_midnight_pulse" and Ability.IsReady(midNightPulse) and ultimateHelper.cache['midNightPulseCasted'] == false then 
-        Ability.CastPosition(midNightPulse, pos)
-        ultimateHelper.cache['midNightPulseCasted'] = true
-        Log.Write("hey!!!")
-    end
-
-    if ulti ~= nil and Ability.IsCastable(ulti, myMana) and Ability.IsInAbilityPhase(midNightPulse) and ultimateHelper.cache['midNightPulseCasted'] == true and ultimateHelper.cache['blackHoleCasted'] == false then
-            Log.Write("yo!!!")
+    if ulti ~= nil and Ability.IsCastable(ulti, myMana) then
         local name =Ability.GetName(ulti)
         if name == "enigma_black_hole" or name == "faceless_void_chronosphere" then
             Ability.CastPosition(ulti, pos, true)
         elseif name == "magnataur_reverse_polarity" then
             Ability.CastNoTarget(ulti,true)
         end
-        if not Ability.IsReady(midNightPulse) then
-            ultimateHelper.cache['midNightPulseCasted'] = false
-        end 
-        ultimateHelper.cache['blackHoleCasted'] = true
     end
 end 
 

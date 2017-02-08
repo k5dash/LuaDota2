@@ -43,11 +43,13 @@ function ultimateHelper.processCastQueue(myHero)
         table.remove(ultimateHelper.castQueue, 1)
         local ability = element[2]
         local position = element[3]
+        local onlyUseIfChanneling = element[4]
         if type(ability) == "string" then
             ability = NPC.GetItem(myHero, ability, true)
         end 
         local myMana = NPC.GetMana(myHero)
         if ability and Ability.IsCastable(ability,myMana) and Ability.IsReady(ability) then
+            if onlyUseIfChanneling and not NPC.IsChannellingAbility(myHero) then return end 
             if position == null then 
                 Ability.CastNoTarget(ability)
             else 
@@ -102,7 +104,7 @@ function ultimateHelper.useItem(myHero, finalPos)
 
     local bkb = NPC.GetItem(myHero, "item_black_king_bar", true) 
     if bkb ~= nill then
-        table.insert(ultimateHelper.castQueue,{0, bkb})
+        table.insert(ultimateHelper.castQueue,{0, bkb,})
     end
     local shivas = NPC.GetItem(myHero, "item_shivas_guard", true)
     if shivas ~= nill and Ability.IsCastable(shivas, myMana)then
@@ -246,7 +248,7 @@ function ultimateHelper.castUltimate(myHero, pos)
     if refresher == nill then return end 
 
     if myMana >= Ability.GetManaCost(midNightPulse) + Ability.GetManaCost(ulti) + Ability.GetManaCost(refresher) then
-        table.insert(ultimateHelper.castQueue,{0.1, refresher})
+        table.insert(ultimateHelper.castQueue,{0.1, refresher, nill, true})
         return
     end  
 end 

@@ -116,7 +116,7 @@ function ultimateHelper.useItem(myHero, finalPos)
         if NPC.IsPositionInRange(myHero, finalPos, 1200, 0) then
             table.insert(ultimateHelper.castQueue,{0, dagger, finalPos})
         else
-            local dir = pos - NPC.GetAbsOrigin(myHero)
+            local dir = finalPos - NPC.GetAbsOrigin(myHero)
             dir:SetZ(0)
             dir:Normalize()
             dir:Scale(1199)

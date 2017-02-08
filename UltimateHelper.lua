@@ -1,8 +1,9 @@
 local ultimateHelper= {}
 
-ultimateHelper.optionEnable = Menu.AddOption({ "Utility","Black Hole Helper"}, "Enable", "Stop ultimate if no enemy in radius")
-ultimateHelper.optionMidNightPulseEnable = Menu.AddOption({ "Utility","Black Hole Helper"}, "Mid Night Pulse", "Use Mid Night Pulse")
+ultimateHelper.optionEnable = Menu.AddOption({ "Utility","Black Hole Helper"}, "Enable", "Enigama Black Hole")
+ultimateHelper.optionMidNightPulseEnable = Menu.AddOption({ "Utility","Black Hole Helper"}, "MidNight Pulse", "Use Mid Night Pulse")
 ultimateHelper.optionKey = Menu.AddKeyOption({ "Utility","Black Hole Helper"}, "Key",Enum.ButtonCode.KEY_P)
+ultimateHelper.optionDelay = Menu.AddOption({ "Utility", "Black Hole Helper"}, "MidNight Pulse Delay", "", 1, 6, 1)
 
 ultimateHelper.ultiRadius = {enigma_black_hole = 420, magnataur_reverse_polarity = 410, faceless_void_chronosphere = 425}
 ultimateHelper.font = Renderer.LoadFont("Tahoma", 30, Enum.FontWeight.EXTRABOLD)
@@ -231,7 +232,8 @@ function ultimateHelper.castUltimate(myHero, pos)
 
     local midNightPulse = NPC.GetAbilityByIndex(myHero, 2)
     if midNightPulse ~= nil and Ability.IsCastable(midNightPulse, myMana) and Menu.IsEnabled(ultimateHelper.optionMidNightPulseEnable) then
-        table.insert(ultimateHelper.castQueue,{0.5, midNightPulse, pos})
+        local delay = Menu.GetValue(ultimateHelper.optionDelay)/10.0
+        table.insert(ultimateHelper.castQueue,{delay, midNightPulse, pos})
     end
 
     if ulti ~= nil and Ability.IsCastable(ulti, myMana) then

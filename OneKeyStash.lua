@@ -9,7 +9,20 @@ oneKeyStash.itemList = {
     item_dagon_3 = true, 
     item_dagon_4 = true, 
     item_dagon_5 = true,
-    item_ethereal_blade =true
+    item_ethereal_blade = true,
+    item_mystic_staff = true
+    item_ogre_axe = true,
+    item_point_booster = true,
+    item_staff_of_wizardry = true,
+    item_ultimate_orb = true,
+    item_aether_lens = true,
+    item_ultimate_scepter = true,
+    item_cyclone = true,
+    item_ancient_janggo = true,
+    item_force_staff = true,
+    item_magic_wand = true,
+    item_null_talisman = true,
+    item_rod_of_atos = true
 }
 
 oneKeyStash.itemOrderStash = {}

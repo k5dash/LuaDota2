@@ -10,7 +10,7 @@ function rapier.OnUpdate()
     local myHero = Heroes.GetLocal()
     if myHero == nill then return end
     
-    local rapierItem = NPC.GetItem(myHero,"item_rapier")
+    local rapierItem = NPC.GetItem(myHero,"item_rapier",false)
     if rapierItem and not NPC.IsAttacking(myHero) and os.clock() > rapier.nextTick then
         Player.PrepareUnitOrders(Players.GetLocal(), Enum.UnitOrder.DOTA_UNIT_ORDER_DISASSEMBLE_ITEM, rapierItem, Vector(0,0,0), rapierItem, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, rapierItem)
     end
@@ -31,8 +31,8 @@ function rapier.OnPrepareUnitOrders(orders)
 end
 
 function rapier.combine(myHero)
-    local blade = NPC.GetItem(myHero,"item_demon_edge")
-    local relic = NPC.GetItem(myHero,"item_relic")
+    local blade = NPC.GetItem(myHero,"item_demon_edge",false)
+    local relic = NPC.GetItem(myHero,"item_relic",false)
     if blade and relic and not NPC.IsAttacking(myHero) then
         Player.PrepareUnitOrders(Players.GetLocal(), 32, blade, Vector(0,0,0), blade, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, blade)
         Player.PrepareUnitOrders(Players.GetLocal(), 32, relic, Vector(0,0,0), relic, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, relic)

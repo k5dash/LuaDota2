@@ -17,7 +17,10 @@ function BrewMasterHelper.OnUpdate()
 	local ultimate = NPC.GetAbilityByIndex(myHero, 3)
 	if ultimate == nill or Ability.GetCooldownTimeLeft(ultimate) == 0 then return end
 
-	if BrewMasterHelper.Pandas["fire"] == nill then 
+	if BrewMasterHelper.Pandas["fire"] == nil or not NPCs.Contains(BrewMasterHelper.Pandas["fire"]) then
+        BrewMasterHelper.Pandas["fire"] = nil
+        BrewMasterHelper.Pandas["storm"] = nil
+        BrewMasterHelper.Pandas["earth"] = nil
 		for i= 1, NPCs.Count() do
 			local entity = NPCs.Get(i)
 			local name = NPC.GetUnitName(entity)

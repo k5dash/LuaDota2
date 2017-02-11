@@ -33,10 +33,11 @@ end
 function rapier.combine(myHero)
     local blade = NPC.GetItem(myHero,"item_demon_edge",false)
     local relic = NPC.GetItem(myHero,"item_relic",false)
+    if Entity.GetHealth(myHero)/Entity.GetMaxHealth(myHero) < 0.2 then return end 
     if blade and relic and not NPC.IsAttacking(myHero) then
         Player.PrepareUnitOrders(Players.GetLocal(), 32, blade, Vector(0,0,0), blade, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, blade)
         Player.PrepareUnitOrders(Players.GetLocal(), 32, relic, Vector(0,0,0), relic, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, relic)
-        rapier.nextTick = os.clock() + 0.5
+        rapier.nextTick = os.clock() + 0.2
     end
 end
 

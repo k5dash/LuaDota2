@@ -11,10 +11,10 @@ function defend.OnUpdate()
     local myHero = Heroes.GetLocal()
     local myTeam = Entity.GetTeamNum(myHero)
     if myHero == nill then return end
-     -- Log.Write(NPC.GetAbsOrigin(myHero):GetX().." X")
-     -- Log.Write(NPC.GetAbsOrigin(myHero):GetY().." Y")
-     -- Log.Write(NPC.GetAbsOrigin(myHero):GetZ().." Z")
-     -- Log.Write(Entity.GetTeamNum(myHero).."teamNum")
+ -- Log.Write(NPC.GetAbsOrigin(myHero):GetX().." X")
+ -- Log.Write(NPC.GetAbsOrigin(myHero):GetY().." Y")
+ -- Log.Write(NPC.GetAbsOrigin(myHero):GetZ().." Z")
+ -- Log.Write(Entity.GetTeamNum(myHero).."teamNum")
     local myDagger = NPC.GetItem(myHero,"item_blink")
     local hurrican = NPC.GetItem(myHero,"item_hurricane_pike")
     for i= 1, Heroes.Count() do
@@ -27,7 +27,7 @@ function defend.OnUpdate()
                     if myTeam == 2 then
                         defend.useDagger(myHero, myDagger,Vector(-7327.4375,-6820.78125,512))
                     else
-                        defend.useDagger(myHero, myDagger,Vector(-7267.6562,6560.25,512))
+                        defend.useDagger(myHero, myDagger,Vector(7267.6562,6560.25,512))
                     end 
                 end
                 local myMana = NPC.GetMana(myHero)

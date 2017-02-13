@@ -22,13 +22,9 @@ function defend.OnUpdate()
         local sameTeam = Entity.GetTeamNum(enemy) == myTeam
         if not sameTeam and not NPC.IsDormant(enemy) and Entity.GetHealth(enemy) > 0 then
             local dagger = NPC.GetItem(enemy,"item_blink")
-            if dagger and Ability.GetCooldownLength(dagger) > 4 and Ability.SecondsSinceLastUse(dagger)<=1 and Ability.SecondsSinceLastUse(dagger)>0 then
+            if dagger and NPC.IsEntityInRange(myHero, enemy, 1000) and Ability.GetCooldownLength(dagger) > 4 and Ability.SecondsSinceLastUse(dagger)<=1 and Ability.SecondsSinceLastUse(dagger)>0 then
                 if Menu.IsEnabled(defend.optionDaggerEnable) and myDagger and Ability.IsReady(myDagger) then              
-                    if myTeam == 2 then
-                        defend.useDagger(myHero, myDagger,Vector(-7327.4375,-6820.78125,512))
-                    else
-                        defend.useDagger(myHero, myDagger,Vector(7267.6562,6560.25,512))
-                    end 
+                    defend.useDagger(myHero, myDagger,defend.GetFountainPosition(myTeam))
                 end
                 local myMana = NPC.GetMana(myHero)
                 if Menu.IsEnabled(defend.optionHurricanEnable) and hurrican and Ability.IsCastable(hurrican, myMana) then
@@ -48,4 +44,18 @@ function defend.useDagger(myHero, dagger, vector)
     local destination = NPC.GetAbsOrigin(myHero) + dir
     Ability.CastPosition(dagger, vector)
 end
+
+function defend.GetFountainPosition(teamNum)
+    for i = 1, NPCs.Count() do 
+        local npc = NPCs.Get(i)
+
+        if Entity.GetTeamNum(npc) == teamNum and NPC.IsStructure(npc) then
+            local name = NPC.GetUnitName(npc)
+            if name ~= nil and name == "dota_fountain" then
+                return NPC.GetAbsOrigin(npc)
+            end
+        end
+    end
+end
+
 return defend

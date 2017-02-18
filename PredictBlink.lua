@@ -14,17 +14,19 @@ function predictBlink.OnUpdate()
     local myHero = Heroes.GetLocal()
     local myTeam = Entity.GetTeamNum(myHero)
     if myHero == nill then return end
-    --Log.Write(NPC.GetTurnRate(myHero))
-     for i = 1, Heroes.Count() do
-        local hero = Heroes.Get(i)
-        local sameTeam = Entity.GetTeamNum(hero) == myTeam
-        if not sameTeam and NPC.GetUnitName(hero) == "npc_dota_hero_antimage" then
-            predictBlink.antimage = hero
-        end
-        if not sameTeam and NPC.GetUnitName(hero) == "npc_dota_hero_queenofpain" then
-            predictBlink.qop = hero
-        end 
-    end  
+
+    if predictBlink.antimage == nill and predictBlink.qop == nill then
+         for i = 1, Heroes.Count() do
+            local hero = Heroes.Get(i)
+            local sameTeam = Entity.GetTeamNum(hero) == myTeam
+            if not sameTeam and NPC.GetAbility(hero, "antimage_blink") then
+                predictBlink.antimage = hero
+            end
+            if not sameTeam and NPC.GetAbility(hero, "queenofpain_blink")  then
+                predictBlink.qop = hero
+            end 
+         end 
+    end 
 
     predictBlink.processHero(predictBlink.antimage)
     predictBlink.processHero(predictBlink.qop)
@@ -60,7 +62,7 @@ function predictBlink.processHero(enemy)
     local name = NPC.GetUnitName(enemy)
     direction:SetZ(0)
     direction:Normalize()
-    if name == "npc_dota_hero_queenofpain" then
+    if name == NPC.GetUnitName(predictBlink.qop) then
         direction:Scale(1300)
     else 
         direction:Scale(1150)

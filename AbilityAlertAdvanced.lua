@@ -1,8 +1,8 @@
 local AbilityAlert2 = {}
 
 AbilityAlert2.option = Menu.AddOption({ "Awareness" }, "Ability Alert Advanced", "Alerts you when certain abilities are used.")
-AbilityAlert2.font = Renderer.LoadFont("Tahoma", 22, Enum.FontWeight.EXTRABOLD)
-AbilityAlert2.mapFont = Renderer.LoadFont("Tahoma", 16, Enum.FontWeight.NORMAL)
+AbilityAlert2.font = Renderer.LoadFont("Tahoma", 30, Enum.FontWeight.EXTRABOLD)
+AbilityAlert2.mapFont = Renderer.LoadFont("Tahoma", 22, Enum.FontWeight.NORMAL)
 
 -- current active alerts.
 AbilityAlert2.alerts = {}
@@ -65,6 +65,27 @@ AbilityAlert2.ambiguous =
         name = "invoker_emp",
         msg ='',
         ability = "invoker_emp",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "invoker_quas_orb",
+        msg ='',
+        ability = "invoker_quas",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "invoker_wex_orb",
+        msg ='',
+        ability = "invoker_wex",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "invoker_exort_orb",
+        msg ='',
+        ability = "invoker_exort",
         duration = 4,
         unique = true
     },
@@ -167,20 +188,27 @@ AbilityAlert2.ambiguous =
         duration = 35,
         unique = true
     },
-    -- {  
-    --     name = "razor_plasmafield",
-    --     msg ='',
-    --     ability = "razor_plasma_field",
-    --     duration = 4,
-    --     unique = true
-    -- }
-    -- {  
-    --     name = "venomancer_ward_cast",
-    --     msg ='',
-    --     ability = "venomancer_plague_ward",
-    --     duration = 4,
-    --     unique = true
-    -- },
+    {  
+        name = "clinkz_death_pact",
+        msg ='',
+        ability = "clinkz_death_pact",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "razor_plasmafield",
+        msg ='',
+        ability = "razor_plasma_field",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "venomancer_ward_cast",
+        msg ='',
+        ability = "venomancer_plague_ward",
+        duration = 4,
+        unique = true
+    },
     {  
         name = "meepo_poof_end",
         msg ='',
@@ -188,13 +216,13 @@ AbilityAlert2.ambiguous =
         duration = 4,
         unique = true
     },
-    -- {  
-    --     name = "slark_dark_pact_pulses",
-    --     msg ='',
-    --     ability = "slark_dark_pact",
-    --     duration = 4,
-    --     unique = true
-    -- },
+    {  
+        name = "slark_dark_pact_pulses",
+        msg ='',
+        ability = "slark_dark_pact",
+        duration = 4,
+        unique = true
+    },
     {  
         name = "slark_pounce_start",
         msg ='',
@@ -209,20 +237,27 @@ AbilityAlert2.ambiguous =
         duration = 4,
         unique = true
     },
-    -- {  
-    --     name = "zuus_arc_lightning_head",
-    --     msg ='',
-    --     ability = "zuus_arc_lightning",
-    --     duration = 4,
-    --     unique = true
-    -- }
-    -- {  
-    --     name = "zuus_lighting_bolt_start",
-    --     msg ='',
-    --     ability = "zuus_lighting_bolt",
-    --     duration = 4,
-    --     unique = true
-    -- }
+    {  
+        name = "zuus_arc_lightning_head",
+        msg ='',
+        ability = "zuus_arc_lightning",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "zuus_thundergods_wrath_start",
+        msg ='',
+        ability = "zuus_thundergods_wrath",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "zuus_lightning_bolt",
+        msg ='',
+        ability = "zuus_lightning_bolt",
+        duration = 4,
+        unique = true
+    },
     {  
         name = "lina_spell_light_strike_array",
         msg ='',
@@ -278,6 +313,97 @@ AbilityAlert2.ambiguous =
         ability = "phantom_assassin_phantom_strike",
         duration = 4,
         unique = true
+    },
+    {  
+        name = "stormspirit_ball_lightning",
+        msg ='',
+        ability = "storm_spirit_ball_lightning",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "ancient_apparition_ice_blast_final",
+        msg ='has Ulted!!',
+        ability = "ancient_apparition_ice_blast",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "ancient_apparition_chilling_touch",
+        msg ='',
+        ability = "ancient_apparition_chilling_touch",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "ancient_ice_vortex",
+        msg ='',
+        ability = "ancient_apparition_ice_vortex",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "weaver_shukuchi_damage",
+        msg ='',
+        ability = "weaver_shukuchi",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "weaver_shukuchi_start",
+        msg ='',
+        ability = "weaver_shukuchi",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "pudge_meathook",
+        msg ='',
+        ability = "pudge_meat_hook",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "rattletrap_cog_ambient",
+        msg ='',
+        ability = "rattletrap_power_cogs",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "rattletrap_hookshot",
+        msg ='',
+        ability = "rattletrap_hookshot",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "rattletrap_rocket_flare",
+        msg ='',
+        ability = "rattletrap_rocket_flare",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "tinker_rearm",
+        msg ='',
+        ability = "tinker_rearm",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "luna_lucent_beam",
+        msg ='',
+        ability = "luna_lucent_beam",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "pugna_netherblast",
+        msg ='',
+        ability = "pugna_nether_blast",
+        duration = 4,
+        unique = true
     }
 }
 
@@ -315,7 +441,7 @@ function AbilityAlert2.InsertAmbiguous(particle)
             }
             if enemy then
                 newAlert['enemy'] = NPC.GetUnitName(enemy)
-                newAlert['msg'] = NPC.GetUnitName(enemy)..enemyAbility.msg
+                newAlert['msg'] = AbilityAlert2.Heroes[NPC.GetUnitName(enemy)]..enemyAbility.msg
             end 
 
             table.insert(AbilityAlert2.alerts, newAlert)
@@ -393,6 +519,15 @@ function AbilityAlert2.OnParticleUpdate(particle)
     end
 end
 
+function AbilityAlert2.OnParticleUpdateEntity(particle)
+    Log.Write("position"..particle.position:__tostring())
+    for k, alert in ipairs(AbilityAlert2.alerts) do
+        if particle.index == alert.index then
+            alert.position = particle.position
+        end
+    end
+end 
+
 function AbilityAlert2.OnDraw()
     for i, alert in ipairs(AbilityAlert2.alerts) do
         local timeLeft = alert.endTime - os.clock()
@@ -450,7 +585,7 @@ function AbilityAlert2.drawPosition(pos,enemyName)
     --Log.Write('x'..newX)
     --Log.Write('y'..newY)
     Renderer.SetDrawColor(0, 255, 127)
-    Renderer.DrawTextCentered(AbilityAlert2.font, 15+newX, (h-315-newY) , enemyName, 1)
+    Renderer.DrawTextCentered(AbilityAlert2.mapFont, 15+newX, (h-315-newY) , enemyName, 1)
 end
 
 AbilityAlert2.Heroes ={
@@ -480,6 +615,13 @@ AbilityAlert2.Heroes ={
     npc_dota_hero_disruptor = "disr",
     npc_dota_hero_jakiro = "jakiro",
     npc_dota_hero_crystal_maiden = "cm",
-    npc_dota_hero_phantom_assassin = "pa"
+    npc_dota_hero_phantom_assassin = "pa",
+    npc_dota_hero_storm_spirit ="storm",
+    npc_dota_hero_ancient_apparition = "AA",
+    npc_dota_hero_weaver = "wearver",
+    npc_dota_hero_pudge = "pudge",
+    npc_dota_hero_tinker = "tinker",
+    npc_dota_hero_mirana = "mirana",
+    npc_dota_hero_pugna ="pugna"
 }
 return AbilityAlert2

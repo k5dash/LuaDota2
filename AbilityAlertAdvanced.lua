@@ -421,7 +421,6 @@ AbilityAlert2.teamSpecific =
 -- Returns true if an alert was created, false otherwise.
 function AbilityAlert2.InsertAmbiguous(particle)
     local myHero = Heroes.GetLocal()
-     if Entity.GetTeamNum(particle.entity) == Entity.GetTeamNum(myHero) then return end
     for i, enemyAbility in ipairs(AbilityAlert2.ambiguous) do
         if particle.name == enemyAbility.name then
             local enemy = nill
@@ -433,8 +432,12 @@ function AbilityAlert2.InsertAmbiguous(particle)
                     if not sameTeam and NPC.GetAbility(hero, enemyAbility.ability) then
                         enemy = hero
                     end
+                    if sameTeam and NPC.GetAbility(hero, enemyAbility.ability) then
+                        ally = hero
+                    end
                 end
             end
+
             local newAlert = {
                 index = particle.index,
                 name = enemyAbility.name,
@@ -445,8 +448,9 @@ function AbilityAlert2.InsertAmbiguous(particle)
             if enemy then
                 newAlert['enemy'] = NPC.GetUnitName(enemy)
                 newAlert['msg'] = AbilityAlert2.Heroes[NPC.GetUnitName(enemy)]..enemyAbility.msg
+                table.insert(AbilityAlert2.alerts, newAlert)
             end 
-
+            if ally then return end
             table.insert(AbilityAlert2.alerts, newAlert)
 
             return true

@@ -420,13 +420,16 @@ AbilityAlert2.teamSpecific =
 
 -- Returns true if an alert was created, false otherwise.
 function AbilityAlert2.InsertAmbiguous(particle)
+    local myHero = Heroes.GetLocal()
+     if Entity.GetTeamNum(particle.entity) == Entity.GetTeamNum(myHero) then return end
     for i, enemyAbility in ipairs(AbilityAlert2.ambiguous) do
         if particle.name == enemyAbility.name then
             local enemy = nill
+            local ally = nill
             for i = 1, Heroes.Count() do
                 local hero = Heroes.Get(i)
                 if not NPC.IsIllusion(hero) then
-                    local sameTeam = Entity.GetTeamNum(hero) == myTeam
+                    local sameTeam = Entity.GetTeamNum(hero) == Entity.GetTeamNum(myHero)
                     if not sameTeam and NPC.GetAbility(hero, enemyAbility.ability) then
                         enemy = hero
                     end

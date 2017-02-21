@@ -579,6 +579,7 @@ end
 -- end 
 
 function AbilityAlert2.drawPosition(pos,enemyName)
+    if not enemyName then return end
     local w, h = Renderer.GetScreenSize()
     local x0 =AbilityAlert2.mapOrigin['x']
     local y0 =AbilityAlert2.mapOrigin['y']

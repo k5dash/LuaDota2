@@ -2,8 +2,9 @@ local ultimateHelper= {}
 
 ultimateHelper.optionEnable = Menu.AddOption({ "Utility","Black Hole Helper"}, "Enable", "Enigama Black Hole")
 ultimateHelper.optionMidNightPulseEnable = Menu.AddOption({ "Utility","Black Hole Helper"}, "MidNight Pulse", "Use Mid Night Pulse")
-ultimateHelper.optionKey = Menu.AddKeyOption({ "Utility","Black Hole Helper"}, "Key",Enum.ButtonCode.KEY_P)
-ultimateHelper.optionDelay = Menu.AddOption({ "Utility", "Black Hole Helper"}, "MidNight Pulse Delay", "", 1, 6, 1)
+ultimateHelper.option3Key = Menu.AddKeyOption({ "Utility","Black Hole Helper"}, ">=3 Men Key",Enum.ButtonCode.KEY_P)
+ultimateHelper.option2Key = Menu.AddKeyOption({ "Utility","Black Hole Helper"}, "<=2 Men Key",Enum.ButtonCode.KEY_K)
+ultimateHelper.optionDelay = Menu.AddOption({ "Utility", "Black Hole Helper"}, "MidNight Pulse Delay", "", 1, 8, 1)
 
 ultimateHelper.ultiRadius = {enigma_black_hole = 420, magnataur_reverse_polarity = 410, faceless_void_chronosphere = 425}
 ultimateHelper.font = Renderer.LoadFont("Tahoma", 30, Enum.FontWeight.EXTRABOLD)
@@ -21,20 +22,82 @@ function ultimateHelper.OnUpdate()
     ultimateHelper.processCastQueue(myHero)
     if #ultimateHelper.castQueue ~= 0 then return end 
 
-    if not Menu.IsKeyDown(ultimateHelper.optionKey) then return end
-    if myHero == nill then return end
-    local ultimate = NPC.GetAbilityByIndex(myHero, 3)
-    if ultimate == nill or not Ability.IsReady(ultimate) then return end 
+    if Menu.IsKeyDown(ultimateHelper.option3Key) then
+        if myHero == nill then return end
+        local ultimate = NPC.GetAbilityByIndex(myHero, 3)
+        if ultimate == nill or not Ability.IsReady(ultimate) then return end 
 
-    local maxCount,finalPos = ultimateHelper.findBestPostiont(myHero)
+        local maxCount,finalPos = ultimateHelper.findBestPostiont(myHero)
 
-    if finalPos == nill or maxCount < 3 then return end
-    --
-    ultimateHelper.renderHelper(finalPos, "CT")
-    --ultimateHelper.renderHelper(ccs, "CC")
-    --ultimateHelper.renderHelper(mid, "MD")
-    if not ultimateHelper.useItem(myHero, finalPos) then return end 
-    ultimateHelper.castUltimate(myHero, finalPos) 
+        if finalPos == nill or maxCount < 3 then return end
+        --
+        ultimateHelper.renderHelper(finalPos, "CT")
+        --ultimateHelper.renderHelper(ccs, "CC")
+        --ultimateHelper.renderHelper(mid, "MD")
+        if not ultimateHelper.useItem(myHero, finalPos) then return end 
+        ultimateHelper.castUltimate(myHero, finalPos) 
+        return
+    end 
+
+    if Menu.IsKeyDown(ultimateHelper.option2Key) then
+        if myHero == nill then return end
+        local ultimate = NPC.GetAbilityByIndex(myHero, 3)
+        if ultimate == nill or not Ability.IsReady(ultimate) then return end 
+        local enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(myHero), Enum.TeamType.TEAM_ENEMY)
+        if not enemy then return end 
+        local enemyPos = Entity.GetAbsOrigin(enemy)
+        local myPos = Entity.GetAbsOrigin(myHero)
+        local vec = enemyPos-myPos
+        local distance = vec:Length2D()
+        if distance>1200 then return end
+        local finalPos = ultimateHelper.processHeroesLessThan2(myHero, enemy)
+        if not finalPos then
+            finalPos = enemyPos
+        end 
+        if not ultimateHelper.useItem(myHero, finalPos) then return end 
+        ultimateHelper.castUltimate(myHero, finalPos) 
+    end
+end
+
+function ultimateHelper.processHeroesLessThan2(myHero, enemy)
+    local secondEnemy = nil
+    local secondDistance = 100000
+    local myTeam = Entity.GetTeamNum( myHero )
+    for i = 1, Heroes.Count() do
+        local hero = Heroes.Get(i)
+        if not NPC.IsIllusion(hero) and hero~=enemy and Entity.IsAlive(hero)then
+            local sameTeam = Entity.GetTeamNum(hero) == myTeam
+            if not sameTeam and not Entity.IsDormant(hero) then
+                Log.Write("heyyyy")
+                local enemyPos = Entity.GetAbsOrigin(hero)
+                local myPos = Input.GetWorldCursorPos()
+                local vec = enemyPos-myPos
+                local distance = vec:Length2D()
+                if distance<secondDistance then
+                    secondDistance = distance
+                    secondEnemy = hero
+                end 
+            end
+        end
+    end
+
+    if secondEnemy then
+        local secondEnemyPos = Entity.GetAbsOrigin(secondEnemy)
+        local enemyPos = Entity.GetAbsOrigin(enemy)
+        local vec = secondEnemyPos - enemyPos
+        local distance = vec:Length2D()
+        if distance> 420*2 then return end
+        local midPoint = enemyPos + secondEnemyPos
+        midPoint:SetZ(0)
+        midPoint:SetX(midPoint:GetX()/2) 
+        midPoint:SetY(midPoint:GetY()/2)
+        local myPos = Entity.GetAbsOrigin(myHero)
+        vec = myPos - midPoint
+        distance = vec:Length2D()
+        if distance>1200 then return end 
+        return midPoint
+    end 
+    return nil
 end
 
 
@@ -113,7 +176,6 @@ function ultimateHelper.useItem(myHero, finalPos)
     end
     local ultimate = NPC.GetAbilityByIndex(myHero, 3)
     if dagger ~= nill and ultimate~= nill and Ability.IsCastable(ultimate, myMana) and Ability.IsReady(dagger) and Ability.IsReady(ultimate) then
-        Log.Write("yoooo")
         if NPC.IsPositionInRange(myHero, finalPos, 1200, 0) then
             table.insert(ultimateHelper.castQueue,{0, dagger, finalPos})
         else

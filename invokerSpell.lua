@@ -38,16 +38,58 @@ function invoker.OnUpdate()
     if myHero == nill then return end 
     
     if NPC.GetUnitName(myHero) ~= "npc_dota_hero_invoker" then return end
-    if Menu.IsKeyDownOnce(invoker.optionStop) then 
-        invoker.castQueue ={}
-        return
-    end 
 
     local Q = NPC.GetAbilityByIndex(myHero, 0)
     local W = NPC.GetAbilityByIndex(myHero, 1)
     local E = NPC.GetAbilityByIndex(myHero, 2)
     local R = NPC.GetAbilityByIndex(myHero, 5)
     local myMana = NPC.GetMana(myHero)
+     if Menu.IsKeyDownOnce(invoker.optionColdSnap) then 
+        invoker.coldSnapInstant(Q,W,E,R, myMana)
+        return        
+    end 
+
+    if Menu.IsKeyDownOnce(invoker.optionGhostWalk) then 
+        invoker.ghostWalkInstant(Q,W,E,R, myMana) 
+        return        
+    end 
+    if Menu.IsKeyDownOnce(invoker.optionIceWall) then 
+        invoker.iceWallInstant(Q,W,E,R, myMana) 
+        return        
+    end 
+    if Menu.IsKeyDownOnce(invoker.optionEMP) then 
+        invoker.EMPInstant(Q,W,E,R, myMana) 
+        return       
+    end 
+    if Menu.IsKeyDownOnce(invoker.optionTornado) then 
+        invoker.tornadoInstant(Q,W,E,R, myMana) 
+        return        
+    end 
+    if Menu.IsKeyDownOnce(invoker.optionAlacrity) then 
+        invoker.alacrityInstant(Q,W,E,R, myMana) 
+        return        
+    end 
+    if Menu.IsKeyDownOnce(invoker.optionSS) then 
+        invoker.SSInstant(Q,W,E,R, myMana) 
+        return        
+    end 
+    if Menu.IsKeyDownOnce(invoker.optionForgeSpirit) then 
+        invoker.forgeSpiritInstant(Q,W,E,R, myMana) 
+        return        
+    end 
+    if Menu.IsKeyDownOnce(invoker.optionChaos) then 
+        invoker.chaosInstant(Q,W,E,R, myMana) 
+        return        
+    end 
+    if Menu.IsKeyDownOnce(invoker.optionBlast) then 
+        invoker.blastInstant(Q,W,E,R, myMana) 
+        return        
+    end 
+
+    if Menu.IsKeyDownOnce(invoker.optionStop) then 
+        invoker.castQueue ={}
+        return
+    end 
     local enemy = Input.GetNearestHeroToCursor(Entity.GetTeamNum(myHero), Enum.TeamType.TEAM_ENEMY)
     local modifiers = NPC.GetModifiers(enemy)
     -- for i,v in ipairs(modifiers) do
@@ -94,7 +136,7 @@ function invoker.OnUpdate()
         distance = distance:Length2D()
         if distance > 700 then return end 
         local time = distance/1000
-        Log.Write(delay+time)
+        --Log.Write(delay+time)
 
         local angle = Entity.GetRotation(myHero)
         -- local angleOffset = Angle(0, 45, 0)
@@ -171,7 +213,7 @@ function invoker.OnUpdate()
             local distance = enemyPos - myPos
             distance = distance:Length2D()
             local time = distance/1000
-            Log.Write(delay+time)
+            --Log.Write(delay+time)
             if 2.9< delay + time +0.2 then
                 table.insert(invoker.castQueue,{delay+time+0.2-2.9, tornado, NPC.GetAbsOrigin(enemy), nil, nil})
                 table.insert(invoker.castQueue,{0.1, EMP, NPC.GetAbsOrigin(enemy), nil, enemy})
@@ -230,48 +272,6 @@ function invoker.OnUpdate()
     local myHero = Heroes.GetLocal()
     invoker.processCastQueue(myHero)
     if #invoker.castQueue ~= 0 then return end 
-
-    if Menu.IsKeyDownOnce(invoker.optionColdSnap) then 
-        invoker.coldSnap(Q,W,E,R, myMana,0)
-        return        
-    end 
-
-    if Menu.IsKeyDownOnce(invoker.optionGhostWalk) then 
-        invoker.ghostWalk(Q,W,E,R, myMana,0) 
-        return        
-    end 
-    if Menu.IsKeyDownOnce(invoker.optionIceWall) then 
-        invoker.iceWall(Q,W,E,R, myMana,0) 
-        return        
-    end 
-    if Menu.IsKeyDownOnce(invoker.optionEMP) then 
-        invoker.EMP(Q,W,E,R, myMana,0) 
-        return        
-    end 
-    if Menu.IsKeyDownOnce(invoker.optionTornado) then 
-        invoker.tornado(Q,W,E,R, myMana,0) 
-        return        
-    end 
-    if Menu.IsKeyDownOnce(invoker.optionAlacrity) then 
-        invoker.alacrity(Q,W,E,R, myMana,0) 
-        return        
-    end 
-    if Menu.IsKeyDownOnce(invoker.optionSS) then 
-        invoker.SS(Q,W,E,R, myMana,0) 
-        return        
-    end 
-    if Menu.IsKeyDownOnce(invoker.optionForgeSpirit) then 
-        invoker.forgeSpirit(Q,W,E,R, myMana,0) 
-        return        
-    end 
-    if Menu.IsKeyDownOnce(invoker.optionChaos) then 
-        invoker.chaos(Q,W,E,R, myMana,0) 
-        return        
-    end 
-    if Menu.IsKeyDownOnce(invoker.optionBlast) then 
-        invoker.blast(Q,W,E,R, myMana,0) 
-        return        
-    end 
 end
 
 function invoker.skillInSlot(myHero, skillName)
@@ -355,7 +355,7 @@ function invoker.processCastQueue(myHero)
             if not hasBuff then 
                 local totalLatency = (NetChannel.GetAvgLatency(Enum.Flow.FLOW_INCOMING) + NetChannel.GetAvgLatency(Enum.Flow.FLOW_OUTGOING)) * 2
                 invoker.nextTick = os.clock() + delay + totalLatency
-                Log.Write(invoker.nextTick)
+                --Log.Write(invoker.nextTick)
                 return
             end 
         end
@@ -454,6 +454,101 @@ function invoker.blast(Q,W,E,R, myMana,delay,hero, modifier)
         table.insert(invoker.castQueue,{0, E, nil, nil, nil})
         table.insert(invoker.castQueue,{0, W, nil, nil, nil})
         table.insert(invoker.castQueue,{delay, R, nil, nil,nil, hero, modifier})
+    end 
+end 
+
+
+
+
+function invoker.coldSnapInstant(Q,W,E,R, myMana,delay,hero,modifier) 
+    if Q and Ability.IsCastable(R, myMana) and Ability.IsReady(R) then
+        Ability.CastNoTarget(Q,myMana)
+        Ability.CastNoTarget(Q,myMana)
+        Ability.CastNoTarget(Q,myMana)
+        Ability.CastNoTarget(R,myMana)
+    end 
+end 
+
+function invoker.ghostWalkInstant(Q,W,E,R, myMana,delay) 
+    if Q and W and Ability.IsCastable(R, myMana) and Ability.IsReady(R) then
+        Ability.CastNoTarget(Q,myMana)
+        Ability.CastNoTarget(Q,myMana)
+        Ability.CastNoTarget(W,myMana)
+        Ability.CastNoTarget(R,myMana)
+        Ability.CastNoTarget(W,myMana)
+        Ability.CastNoTarget(W,myMana)
+    end 
+end 
+
+function invoker.iceWallInstant(Q,W,E,R, myMana,delay) 
+    if Q and E and Ability.IsCastable(R, myMana) and Ability.IsReady(R) then
+        Ability.CastNoTarget(Q,myMana)
+        Ability.CastNoTarget(Q,myMana)
+        Ability.CastNoTarget(E,myMana)
+        Ability.CastNoTarget(R,myMana)
+    end 
+end 
+
+function invoker.EMPInstant(Q,W,E,R, myMana,delay,hero,modifier) 
+    if W and Ability.IsCastable(R, myMana) and Ability.IsReady(R) then
+        Ability.CastNoTarget(W,myMana)
+        Ability.CastNoTarget(W,myMana)
+        Ability.CastNoTarget(W,myMana)
+        Ability.CastNoTarget(R,myMana)
+    end 
+end 
+
+function invoker.tornadoInstant(Q,W,E,R, myMana,delay) 
+    if W and Q and Ability.IsCastable(R, myMana) and Ability.IsReady(R) then
+        Ability.CastNoTarget(W,myMana)
+        Ability.CastNoTarget(W,myMana)
+        Ability.CastNoTarget(Q,myMana)
+        Ability.CastNoTarget(R,myMana)
+    end 
+end 
+
+function invoker.alacrityInstant(Q,W,E,R, myMana,delay) 
+    if W and E and Ability.IsCastable(R, myMana) and Ability.IsReady(R) then
+        Ability.CastNoTarget(W,myMana)
+        Ability.CastNoTarget(W,myMana)
+        Ability.CastNoTarget(E,myMana)
+        Ability.CastNoTarget(R,myMana)
+    end 
+end 
+
+function invoker.SSInstant(Q,W,E,R, myMana,delay) 
+    if E and Ability.IsCastable(R, myMana) and Ability.IsReady(R) then
+        Ability.CastNoTarget(E,myMana)
+        Ability.CastNoTarget(E,myMana)
+        Ability.CastNoTarget(E,myMana)
+        Ability.CastNoTarget(R,myMana)
+    end 
+end 
+
+function invoker.forgeSpiritInstant(Q,W,E,R, myMana,delay) 
+    if E and Q and Ability.IsCastable(R, myMana) and Ability.IsReady(R) then
+        Ability.CastNoTarget(E,myMana)
+        Ability.CastNoTarget(E,myMana)
+        Ability.CastNoTarget(Q,myMana)
+        Ability.CastNoTarget(R,myMana)
+    end 
+end 
+
+function invoker.chaosInstant(Q,W,E,R, myMana,delay,hero,modifier) 
+    if E and W and Ability.IsCastable(R, myMana) and Ability.IsReady(R) then
+        Ability.CastNoTarget(E,myMana)
+        Ability.CastNoTarget(E,myMana)
+        Ability.CastNoTarget(W,myMana)
+        Ability.CastNoTarget(R,myMana)
+    end 
+end 
+
+function invoker.blastInstant(Q,W,E,R, myMana,delay,hero, modifier) 
+    if E and W and Q and Ability.IsCastable(R, myMana) and Ability.IsReady(R) then
+        Ability.CastNoTarget(Q,myMana)
+        Ability.CastNoTarget(W,myMana)
+        Ability.CastNoTarget(E,myMana)
+        Ability.CastNoTarget(R,myMana)
     end 
 end 
 

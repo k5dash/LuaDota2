@@ -101,14 +101,17 @@ function invoker.OnUpdate()
         local orchid = NPC.GetItem(myHero,"item_orchid")
         if orchid then
             invoker.repeatInsert(0.001, orchid, nil, nil, enemy, 5)
+            table.insert(invoker.castQueue,{0, "Attack", nil, nil, enemy})
         end 
         local blood = NPC.GetItem(myHero,"item_bloodthorn")
         if blood then
             invoker.repeatInsert(0.001, blood, nil, nil, enemy, 5)
+            table.insert(invoker.castQueue,{0, "Attack", nil, nil, enemy})
         end 
         local coldSnap = invoker.skillInSlot(myHero, "invoker_cold_snap")
         if coldSnap then
             invoker.repeatInsert(0.001, coldSnap, nil, nil, enemy, 5)
+            table.insert(invoker.castQueue,{0, "Attack", nil, nil, enemy})
         end
         local alacrity = invoker.skillInSlot(myHero, "invoker_alacrity")
         --Log.Write(Ability.GetName(alacrity))
@@ -134,7 +137,7 @@ function invoker.OnUpdate()
         local myPos = NPC.GetAbsOrigin(myHero)
         local distance = enemyPos - myPos
         distance = distance:Length2D()
-        if distance > 700 then return end 
+        if distance > 900 then return end 
         local time = distance/1000
         --Log.Write(delay+time)
 
@@ -146,55 +149,54 @@ function invoker.OnUpdate()
         local turnRate = NPC.GetTurnRate(myHero)
         local iToEnemy = enemyPos - myPos
         local iToEnemyAngle = iToEnemy:ToAngle()
-        local turnTime = math.abs(iToEnemyAngle:GetYaw() - angle:GetYaw())/(turnRate*2000)
+        local turnTime = math.abs(iToEnemyAngle:GetYaw() - angle:GetYaw())/(turnRate*4000)
         table.insert(invoker.castQueue,{0, E, nil, nil, nil})
         table.insert(invoker.castQueue,{0, E, nil, nil, nil})
-        table.insert(invoker.castQueue,{turnTime, E, nil, nil, nil})
-        table.insert(invoker.castQueue,{0.2, tornado, NPC.GetAbsOrigin(enemy), nil, nil})
-        for i= 1,4 do
-            invoker.chaos(Q,W,E,R, myMana,0.05) 
-        end 
-        invoker.chaos(Q,W,E,R, myMana,delay+time+0.2-2.9-0.1)
-        table.insert(invoker.castQueue,{delay+time-2, EMP, NPC.GetAbsOrigin(enemy), nil, enemy})
+        table.insert(invoker.castQueue,{0.1, E, nil, nil, nil})
+        table.insert(invoker.castQueue,{0, tornado, NPC.GetAbsOrigin(enemy), nil, nil})
+        for i = 0,2 do
+             invoker.chaos(Q,W,E,R, myMana,0.001) 
+        end
+        invoker.chaos(Q,W,E,R, myMana,0.010) 
+        table.insert(invoker.castQueue,{0.7, EMP, NPC.GetAbsOrigin(enemy), nil, enemy})
 
         local chaos = NPC.GetAbility(myHero,"invoker_chaos_meteor")
-        invoker.repeatInsert(0.1, chaos, enemyPos, nil, enemy, 5, enemy, "modifier_invoker_tornado")
-        for i= 1,5 do
-                invoker.blast(Q,W,E,R, myMana,0.05,enemy, "modifier_invoker_tornado") 
-        end 
-         table.insert(invoker.castQueue,{delay+time-distance/500-2.1, W, nil, nil, nil})
+        invoker.repeatInsert(0.01, chaos, enemyPos, nil, enemy, 5, enemy, {"modifier_invoker_tornado"})
+        invoker.blast(Q,W,E,R, myMana,0.01,enemy, {"modifier_invoker_tornado"}) 
+        --Log.Write(time2..":"..distance)
+        table.insert(invoker.castQueue,{delay+time-distance/500-1.8, W, nil, nil, nil})
         local blast = NPC.GetAbility(myHero,"invoker_deafening_blast")
         local orchid = NPC.GetItem(myHero,"item_orchid")
         local blood = NPC.GetItem(myHero,"item_bloodthorn")
         local shivas = NPC.GetItem(myHero,"item_shivas_guard")
         if shivas then 
-            invoker.repeatInsert(0.001, shivas, nil, nil, nil, 5,enemy, "modifier_invoker_tornado")
+            invoker.repeatInsert(0.001, shivas, nil, nil, nil, 5,enemy, {"modifier_invoker_tornado"})
         end 
         local candidateItem = orchid
         if blood then 
             candidateItem = blood
         end 
         if candidateItem then
-            invoker.repeatInsertMore({0.001,0,0.001}, {blast,candidateItem,blast}, {enemyPos,nil,enemyPos}, {nil,nil,nil}, {enemy,enemy,enemy}, 5,{enemy,nil,enemy}, {"modifier_invoker_tornado",nil,"modifier_invoker_chaos_meteor_burn"})
+            invoker.repeatInsertMore({0.001,0,0.001}, {blast,candidateItem,blast}, {enemyPos,nil,enemyPos}, {nil,nil,nil}, {enemy,enemy,enemy}, 5,{enemy,nil,enemy}, {{"modifier_invoker_tornado"},{nil},{"modifier_invoker_chaos_meteor_burn"}})
         else
-            invoker.repeatInsert(0.001, blast, enemyPos, nil, enemy, 10,enemy, "modifier_invoker_tornado")
+            invoker.repeatInsert(0.01, blast, enemyPos, nil, enemy, 5,enemy, {"modifier_invoker_tornado"})
         end  
 
         local refresher = NPC.GetItem(myHero, "item_refresher") 
         if not refresher then return end
-        invoker.repeatInsert(0.001, refresher, nil, nil, nil, 5,enemy, "modifier_invoker_deafening_blast_knockback")
-        invoker.repeatInsert(0.001, chaos, enemyPos, nil, enemy, 5,enemy, "modifier_invoker_deafening_blast_disarm")
-        invoker.repeatInsert(0.001, blast, enemyPos, nil, enemy, 5,enemy, "modifier_invoker_deafening_blast_disarm")
+        invoker.repeatInsert(0.001, refresher, nil, nil, nil, 10,enemy, {"modifier_invoker_tornado","modifier_invoker_deafening_blast_disarm"})
+        invoker.repeatInsert(0.001, chaos, enemyPos, nil, enemy, 5,enemy, {"modifier_invoker_deafening_blast_disarm"})
+        invoker.repeatInsert(0.001, blast, enemyPos, nil, enemy, 5,enemy, {"modifier_invoker_deafening_blast_disarm"})
         if shivas then 
-            invoker.repeatInsert(0.001, shivas, nil, nil, nil, 5,enemy, "modifier_invoker_deafening_blast_knockback")
+            invoker.repeatInsert(0.001, shivas, nil, nil, nil, 5,enemy, {"modifier_invoker_deafening_blast_knockback"})
         end 
         if candidateItem then
-            invoker.repeatInsert(0.001, candidateItem, nil, nil, enemy, 5,enemy, "modifier_invoker_deafening_blast_disarm")
+            invoker.repeatInsert(0.001, candidateItem, nil, nil, enemy, 5,enemy, {"modifier_invoker_deafening_blast_disarm"})
         end
         for i= 1,4 do
-            invoker.EMP(Q,W,E,R, myMana,0.001,enemy, "modifier_invoker_deafening_blast_disarm") 
+            invoker.EMP(Q,W,E,R, myMana,0.001,enemy, {"modifier_invoker_deafening_blast_disarm"}) 
         end 
-        invoker.repeatInsert(0.001, EMP, enemyPos, nil, enemy, 5,enemy, "modifier_invoker_deafening_blast_disarm")
+        invoker.repeatInsert(0.001, EMP, enemyPos, nil, enemy, 5,enemy, {"modifier_invoker_deafening_blast_disarm"})
         table.insert(invoker.castQueue,{0, "Attack", nil, nil, enemy})
 
         return
@@ -313,8 +315,14 @@ function invoker.processCastQueue(myHero)
         local repeatUntil = element[9]
         local distanceLimit = element[10]
         if heroWithrequiredBuff and requiredBuff then
-            local hasBuff = NPC.HasModifier(heroWithrequiredBuff, requiredBuff)
-            if not hasBuff then 
+            local flag = false
+            for i = 1, #requiredBuff do
+                 local hasBuff = NPC.HasModifier(heroWithrequiredBuff, requiredBuff[i])
+                if hasBuff then 
+                    flag = true
+                end 
+            end 
+            if not flag then 
                 table.remove(invoker.castQueue, 1)
                 return
             end 

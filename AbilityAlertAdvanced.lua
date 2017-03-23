@@ -1,12 +1,19 @@
 local AbilityAlert2 = {}
-
-AbilityAlert2.option = Menu.AddOption({ "Awareness" }, "Ability Alert Advanced", "Alerts you when certain abilities are used.")
+--resource\flash3\images\miniheroes\lina.png
+AbilityAlert2.option = Menu.AddOption({ "Awareness", "Ability Alert Advanced"}, "Enable", "Alerts you when certain abilities are used.")
+AbilityAlert2.boxSizeOption = Menu.AddOption({ "Awareness", "Ability Alert Advanced" }, "Map Display Size", "", 30, 100, 1)
+AbilityAlert2.miniBoxSizeOption = Menu.AddOption({ "Awareness", "Ability Alert Advanced" }, "MiniMap Display Size", "", 10, 50, 1)
 AbilityAlert2.font = Renderer.LoadFont("Tahoma", 30, Enum.FontWeight.EXTRABOLD)
 AbilityAlert2.mapFont = Renderer.LoadFont("Tahoma", 22, Enum.FontWeight.NORMAL)
-
+AbilityAlert2.miniHero = "resource/flash3/images/miniheroes/"
 -- current active alerts.
 AbilityAlert2.alerts = {}
 AbilityAlert2.mapOrigin = {x=-7000, y=7000}
+AbilityAlert2.cachedIcons = {}
+
+AbilityAlert2.ratioOffset = Menu.AddOption({ "Awareness", "Ability Alert Advanced" }, "Ratio", "", -300, 300, 2)
+AbilityAlert2.xOffset = Menu.AddOption({ "Awareness", "Ability Alert Advanced" }, "x Offset", "", -25, 25, 1)
+AbilityAlert2.yOffset = Menu.AddOption({ "Awareness", "Ability Alert Advanced" }, "y Offset", "", -25, 25, 1)
 
 AbilityAlert2.ambiguous =
 {
@@ -447,7 +454,7 @@ function AbilityAlert2.InsertAmbiguous(particle)
             }
             if enemy then
                 newAlert['enemy'] = NPC.GetUnitName(enemy)
-                newAlert['msg'] = AbilityAlert2.Heroes[NPC.GetUnitName(enemy)]..enemyAbility.msg
+                newAlert['msg'] = string.sub (NPC.GetUnitName(enemy),string.len("npc_dota_hero_")-string.len(NPC.GetUnitName(enemy)))..enemyAbility.msg
                 table.insert(AbilityAlert2.alerts, newAlert)
             end 
             if ally then return end
@@ -506,7 +513,7 @@ end
 -- Callbacks
 --
 function AbilityAlert2.OnParticleCreate(particle)
-    Log.Write(particle.name .. ",=")
+    --Log.Write(particle.name .. ",=")
 
     if not Menu.IsEnabled(AbilityAlert2.option) then return end
 
@@ -516,7 +523,7 @@ function AbilityAlert2.OnParticleCreate(particle)
 end
 
 function AbilityAlert2.OnParticleUpdate(particle)
-    Log.Write("position"..particle.position:__tostring())
+    --Log.Write("position"..particle.position:__tostring())
     if particle.controlPoint ~= 0 then return end
 
     for k, alert in ipairs(AbilityAlert2.alerts) do
@@ -527,7 +534,7 @@ function AbilityAlert2.OnParticleUpdate(particle)
 end
 
 function AbilityAlert2.OnParticleUpdateEntity(particle)
-    Log.Write("position"..particle.position:__tostring())
+    --Log.Write("position"..particle.position:__tostring())
     for k, alert in ipairs(AbilityAlert2.alerts) do
         if particle.index == alert.index then
             alert.position = particle.position
@@ -556,11 +563,15 @@ function AbilityAlert2.OnDraw()
                 local x, y, onScreen = Renderer.WorldToScreen(alert.position)
 
                 if onScreen then
-                    Renderer.DrawTextCentered(AbilityAlert2.mapFont, x, y, alert.name, 1)
+                    if alert.enemy then
+                        AbilityAlert2.DrawMiniHero(x, y, alert.enemy)
+                    else  
+                        Renderer.DrawTextCentered(AbilityAlert2.mapFont, x, y, alert.name, 1)
+                    end 
                     --Renderer.DrawFilledRect(x - 5, y - 5, 10, 10)
                 end
                 if alert.enemy then
-                    AbilityAlert2.drawPosition(alert.position, AbilityAlert2.Heroes[alert.enemy])
+                    AbilityAlert2.drawMiniHeroOnMap(alert.position:GetX(), alert.position:GetY(),alert.enemy)
                 else
                     AbilityAlert2.drawPosition(alert.position, alert.shortName)
                 end 
@@ -569,6 +580,19 @@ function AbilityAlert2.OnDraw()
     end
 end
 
+function AbilityAlert2.DrawMiniHero(x, y, heroName)
+    local shortName =   string.sub (heroName, string.len("npc_dota_hero_")-string.len(heroName))
+    local imageHandle = AbilityAlert2.cachedIcons[shortName]
+
+    if imageHandle == nil then
+        imageHandle = Renderer.LoadImage(AbilityAlert2.miniHero .. shortName .. ".png")
+        AbilityAlert2.cachedIcons[shortName] = imageHandle
+    end
+    local imageColor = { 255, 255, 255 }
+    Renderer.SetDrawColor(imageColor[1], imageColor[2], imageColor[3], 255)
+    local size = Menu.GetValue(AbilityAlert2.boxSizeOption)
+    Renderer.DrawImage(imageHandle, x-math.floor(size/2), y-math.floor(size/2), size, size)
+end
 -- function AbilityAlert2.OnEntityCreate(ent)
 --     Log.Write(NPC.GetAbsOrigin(ent):__tostring())
 -- end 
@@ -578,6 +602,36 @@ end
 --     Log.Write(NPC.GetAbsOrigin(animation.unit):__tostring())
 -- end 
 
+
+function AbilityAlert2.drawMiniHeroOnMap(x,y,enemyName)
+    if not enemyName then return end
+    local w, h = Renderer.GetScreenSize()
+    local x0 =AbilityAlert2.mapOrigin['x']
+    local y0 =AbilityAlert2.mapOrigin['y']
+
+    local ratio = 14000/300
+
+    local ratioOffset = Menu.GetValue(AbilityAlert2.ratioOffset)
+    local xOffset = Menu.GetValue(AbilityAlert2.xOffset)
+    local yOffset = Menu.GetValue(AbilityAlert2.yOffset)
+
+    local newX = math.floor((x -x0)/(ratio+ratioOffset/10))
+    local newY = math.floor((y -y0)/(ratio+ratioOffset/10))
+
+    local shortName =   string.sub (enemyName, string.len("npc_dota_hero_")-string.len(enemyName))
+    local imageHandle = AbilityAlert2.cachedIcons[shortName]
+
+    if imageHandle == nil then
+        imageHandle = Renderer.LoadImage(AbilityAlert2.miniHero .. shortName .. ".png")
+        AbilityAlert2.cachedIcons[shortName] = imageHandle
+    end
+    local imageColor = { 255, 255, 255 }
+    Renderer.SetDrawColor(imageColor[1], imageColor[2], imageColor[3], 255)
+    local size = Menu.GetValue(AbilityAlert2.miniBoxSizeOption)
+
+    Renderer.DrawImage(imageHandle, 15+newX-math.floor(size/2)+xOffset, (h-315-newY-math.floor(size/2)-yOffset), size , size)
+end
+
 function AbilityAlert2.drawPosition(pos,enemyName)
     if not enemyName then return end
     local w, h = Renderer.GetScreenSize()
@@ -585,51 +639,19 @@ function AbilityAlert2.drawPosition(pos,enemyName)
     local y0 =AbilityAlert2.mapOrigin['y']
 
     local ratio = 14000/300
+
+    local ratioOffset = Menu.GetValue(AbilityAlert2.ratioOffset)
+    local xOffset = Menu.GetValue(AbilityAlert2.xOffset)
+    local yOffset = Menu.GetValue(AbilityAlert2.yOffset)
+
     local x = pos:GetX()
     local y = pos:GetY()
 
-    local newX = math.floor((x -x0)/ratio)
-    local newY = math.floor((y -y0)/ratio)
+    local newX = math.floor((x -x0)/(ratio+ratioOffset/10))
+    local newY = math.floor((y -y0)/(ratio+ratioOffset/10))
     --Log.Write('x'..newX)
     --Log.Write('y'..newY)
     Renderer.SetDrawColor(0, 255, 127)
-    Renderer.DrawTextCentered(AbilityAlert2.mapFont, 15+newX, (h-315-newY) , enemyName, 1)
+    Renderer.DrawTextCentered(AbilityAlert2.mapFont, 15+newX +xOffset , (h-315-newY-yOffset) , enemyName, 1)
 end
-
-AbilityAlert2.Heroes ={
-    npc_dota_hero_queenofpain ="qop",
-    npc_dota_hero_nyx_assassin ="nyx",
-    npc_dota_hero_bounty_hunter="bh",
-    npc_dota_hero_antimage="am",
-    npc_dota_hero_invoker="invo",
-    npc_dota_hero_legion_commander="lc",
-    npc_dota_hero_rattletrap="clock",
-    npc_dota_hero_life_stealer="naix",
-    npc_dota_hero_tiny="tiny",
-    npc_dota_hero_earthshaker="es",
-    npc_dota_hero_shredder="timb",
-    npc_dota_hero_centaur="cent",
-    npc_dota_hero_sand_king="sk",
-    npc_dota_hero_alchemist="alch",
-    npc_dota_hero_clinkz="clinkz",
-    npc_dota_hero_razor='raze',
-    npc_dota_hero_venomancer="venon",
-    npc_dota_hero_meepo = "meepo",
-    npc_dota_hero_slark = "slark",
-    npc_dota_hero_ember_spirit = "ember",
-    npc_dota_hero_zuus = "zeus",
-    npc_dota_hero_lina = "lina",
-    npc_dota_hero_leshrac = "lesh",
-    npc_dota_hero_disruptor = "disr",
-    npc_dota_hero_jakiro = "jakiro",
-    npc_dota_hero_crystal_maiden = "cm",
-    npc_dota_hero_phantom_assassin = "pa",
-    npc_dota_hero_storm_spirit ="storm",
-    npc_dota_hero_ancient_apparition = "AA",
-    npc_dota_hero_weaver = "wearver",
-    npc_dota_hero_pudge = "pudge",
-    npc_dota_hero_tinker = "tinker",
-    npc_dota_hero_mirana = "mirana",
-    npc_dota_hero_pugna ="pugna"
-}
 return AbilityAlert2

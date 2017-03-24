@@ -20,10 +20,45 @@ invokerDisplay.InsertColor("Blue", 0, 0, 255)
 invokerDisplay.InsertColor("White", 255, 255, 255)
 invokerDisplay.InsertColor("Black", 0, 0, 0)
 
-invokerDisplay.levelColorOption = Menu.AddOption({ "Hero Specific", "Invoker" }, "Cooldown Display Level Color", "", 1, #invokerDisplay.colors, 1)
+invokerDisplay.sortAbilitiesOption = Menu.AddOption({ "Hero Specific", "Invoker", "Invoker Display" }, "Sort Abilities by Name", "")
 
-for i, v in ipairs(invokerDisplay.colors) do
-    Menu.SetValueName(invokerDisplay.levelColorOption, i, v.name)
+invokerDisplay.invokeOrder =
+{
+    invoker_sun_strike = { 2, 2, 2 },
+    invoker_emp = { 1, 1, 1 },
+    invoker_tornado = { 0, 1, 1 },
+    invoker_alacrity = { 1, 1, 2 },
+    invoker_ghost_walk = { 0, 0, 1 },
+    invoker_deafening_blast = { 0, 1, 2 },
+    invoker_chaos_meteor = { 1, 2, 2 },
+    invoker_cold_snap = { 0, 0, 0 },
+    invoker_ice_wall = { 0, 0, 2 },
+    invoker_forge_spirit = { 0, 2, 2 }
+}
+
+function invokerDisplay.InvokeAbility(ability)
+    if not ability then return end
+
+    local name = Ability.GetName(ability)
+    if not name then return end
+
+    local invokeOrder = invokerDisplay.invokeOrder[name]
+    if not invokeOrder then return end
+
+    local myHero = Heroes.GetLocal()
+
+    local invoke = NPC.GetAbility(myHero, "invoker_invoke")
+    if not invoke then return end
+
+    for i, v in ipairs(invokeOrder) do
+        local orb = NPC.GetAbilityByIndex(myHero, v)
+
+        if orb then
+            Ability.CastNoTarget(orb)
+        end
+    end
+
+    Ability.CastNoTarget(invoke)
 end
 
 function invokerDisplay.InitDisplay()
@@ -60,12 +95,15 @@ function invokerDisplay.DrawDisplay(hero)
         local name = Ability.GetName(ability)
         if ability ~= nil and Entity.IsAbility(ability) and not Ability.IsAttributes(ability) and name~="invoker_invoke" and name ~= "invoker_empty1" and name~= "invoker_empty2"then
             if Ability.GetCooldownTimeLeft(ability)==0 then
-                Log.Write(Ability.GetName(ability))
                 table.insert(abilities, 1, ability)
             else 
                 table.insert(abilities, #abilities+1, ability)
             end 
         end
+    end
+
+    if Menu.IsEnabled(invokerDisplay.sortAbilitiesOption) then
+        table.sort(abilities, function(a, b) return Ability.GetName(a) < Ability.GetName(b) end)
     end
 
     local startX = x - math.floor(((#abilities) / 2) * invokerDisplay.boxSize)
@@ -114,11 +152,19 @@ function invokerDisplay.DrawAbilitySquare(hero, ability, x, y, index)
         end
     end
 
+    local hoveringOver = Input.IsCursorInRect(realX, y, invokerDisplay.boxSize, invokerDisplay.boxSize)
+
+    local boxSize = invokerDisplay.boxSize
+
+    if hoveringOver then
+        boxSize = math.floor(boxSize * 1.25)
+    end
+
     Renderer.SetDrawColor(imageColor[1], imageColor[2], imageColor[3], 255)
-    Renderer.DrawImage(imageHandle, realX, y, invokerDisplay.boxSize, invokerDisplay.boxSize)
+    Renderer.DrawImage(imageHandle, realX, y, boxSize, boxSize)
 
     Renderer.SetDrawColor(outlineColor[1], outlineColor[2], outlineColor[3], 255)
-    Renderer.DrawOutlineRect(realX, y, invokerDisplay.boxSize, invokerDisplay.boxSize)
+    Renderer.DrawOutlineRect(realX, y, boxSize, boxSize)
 
     local cdLength = Ability.GetCooldownLength(ability)
 
@@ -131,25 +177,8 @@ function invokerDisplay.DrawAbilitySquare(hero, ability, x, y, index)
 
         Renderer.SetDrawColor(255, 255, 255)
         Renderer.DrawText(invokerDisplay.font, realX + 1, y, math.floor(Ability.GetCooldown(ability)), 0)
-    end
-
-    invokerDisplay.DrawAbilityLevels(ability, realX, y)
-end
-
-function invokerDisplay.DrawAbilityLevels(ability, x, y)
-    local level = Ability.GetLevel(ability)
-
-    x = x + 1
-    y = ((y + invokerDisplay.boxSize) - invokerDisplay.levelBoxSize) - 1
-
-    local color = invokerDisplay.colors[Menu.GetValue(invokerDisplay.levelColorOption)]
-
-    for i = 1, level do
-        Renderer.SetDrawColor(color.r, color.g, color.b, 255)
-        Renderer.DrawFilledRect(x + ((i - 1) * invokerDisplay.levelBoxSize), y, invokerDisplay.levelBoxSize, invokerDisplay.levelBoxSize)
-        
-        Renderer.SetDrawColor(0, 0, 0, 255)
-        Renderer.DrawOutlineRect(x + ((i - 1) * invokerDisplay.levelBoxSize), y, invokerDisplay.levelBoxSize, invokerDisplay.levelBoxSize)
+    elseif hoveringOver and Input.IsKeyDownOnce(Enum.ButtonCode.MOUSE_LEFT) then
+        invokerDisplay.InvokeAbility(ability)
     end
 end
 

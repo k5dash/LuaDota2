@@ -436,7 +436,7 @@ function AbilityAlert2.InsertAmbiguous(particle)
                 local hero = Heroes.Get(i)
                 if not NPC.IsIllusion(hero) then
                     local sameTeam = Entity.GetTeamNum(hero) == Entity.GetTeamNum(myHero)
-                    if not sameTeam and NPC.GetAbility(hero, enemyAbility.ability) then
+                    if not sameTeam and NPC.GetAbility(hero, enemyAbility.ability) and not NPC.GetAbility(myHero, enemyAbility.ability) then
                         enemy = hero
                     end
                     if sameTeam and NPC.GetAbility(hero, enemyAbility.ability) then

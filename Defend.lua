@@ -4,6 +4,8 @@ defend.optionEnable = Menu.AddOption({ "Utility", "Defend"}, "Enable", "defend")
 --defend.fontSize = Menu.AddOption({ "Awareness", "Show defend Count"}, "Font Size", "", 20, 50, 10)
 defend.optionDaggerEnable = Menu.AddOption({ "Utility","Defend"}, "Use Dagger","")
 defend.optionHurricanEnable = Menu.AddOption({ "Utility","Defend"}, "Use Hurirrican","")
+defend.optionEmber = Menu.AddOption({ "Utility","Defend"}, "Ember Ultimate","")
+defend.optionRadius = Menu.AddOption({ "Utility","Defend"}, "Defend Radius","",100,1500,100)
 defend.font = Renderer.LoadFont("Tahoma", 30, Enum.FontWeight.EXTRABOLD)
 
 function defend.OnUpdate()
@@ -22,11 +24,27 @@ function defend.OnUpdate()
         local sameTeam = Entity.GetTeamNum(enemy) == myTeam
         if not sameTeam and not NPC.IsDormant(enemy) and Entity.GetHealth(enemy) > 0 then
             local dagger = NPC.GetItem(enemy,"item_blink")
-            if dagger and NPC.IsEntityInRange(myHero, enemy, 1000) and Ability.GetCooldownLength(dagger) > 4 and Ability.SecondsSinceLastUse(dagger)<=1 and Ability.SecondsSinceLastUse(dagger)>0 then
-                if Menu.IsEnabled(defend.optionDaggerEnable) and myDagger and Ability.IsReady(myDagger) then              
+            if dagger and NPC.IsEntityInRange(myHero, enemy, Menu.GetValue(defend.optionRadius)) and Ability.GetCooldownLength(dagger) > 4 and Ability.SecondsSinceLastUse(dagger)<=1 and Ability.SecondsSinceLastUse(dagger)>0 then
+            	local myMana = NPC.GetMana(myHero)
+            	if NPC.GetUnitName(myHero) == "npc_dota_hero_ember_spirit" and Menu.IsEnabled(defend.optionEmber) then
+            		local ultimate = NPC.GetAbilityByIndex(myHero, 3)
+            		if Ability.IsCastable(ultimate, myMana) then 
+            			-- local modifiers = NPC.GetModifiers(myHero)
+            			-- for i = 1, #modifiers do
+            			-- 	Log.Write(Modifier.GetName(modifiers[i]))
+            			-- end 
+            			local remnant = NPC.GetModifier(myHero, "modifier_ember_spirit_fire_remnant_charge_counter")
+            			if remnant then
+            				local count = Modifier.GetStackCount(remnant)
+            				if count <3 then 
+            					Ability.CastPosition(ultimate, Entity.GetAbsOrigin(myHero))
+            				end 
+            			end 
+            		end 
+                elseif Menu.IsEnabled(defend.optionDaggerEnable) and myDagger and Ability.IsReady(myDagger) then              
                     defend.useDagger(myHero, myDagger,defend.GetFountainPosition(myTeam))
                 end
-                local myMana = NPC.GetMana(myHero)
+
                 if Menu.IsEnabled(defend.optionHurricanEnable) and hurrican and Ability.IsCastable(hurrican, myMana) then
                     Ability.CastTarget(hurrican, enemy)
                 end 

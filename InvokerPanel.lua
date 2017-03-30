@@ -82,8 +82,8 @@ function invokerDisplay.DrawDisplay(hero)
 
     local x, y, vis = Renderer.WorldToScreen(pos)
     local w, h = Renderer.GetScreenSize()
-    x = w/2;
-    y = h/5*3;
+    x = math.floor(w/2);
+    y = math.floor(h/5*3);
     y = y+Menu.GetValue(invokerDisplay.boxY)
 
     if not vis then return end

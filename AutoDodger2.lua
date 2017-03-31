@@ -22,6 +22,7 @@ AutoDodger2.canReset = true
 AutoDodger2.nextDodgeTime = 0.0
 AutoDodger2.nextDodgeTimeProjectile = 0.0
 AutoDodger2.movePos = Vector()
+AutoDodger2.fountainPos = Vector()
 AutoDodger2.active = false
 
 AutoDodger2.mapFont = Renderer.LoadFont("Tahoma", 50, Enum.FontWeight.NORMAL)
@@ -46,23 +47,201 @@ function AutoDodger2.DodgeLogicProjectile()
     local myTeam = Entity.GetTeamNum(myHero)
     local myMana = NPC.GetMana(myHero)
     local myPos = Entity.GetAbsOrigin(myHero)
+    local myName = NPC.GetUnitName(myHero)
 
-    if NPC.GetUnitName(myHero) == "npc_dota_hero_puck" then 
+    if myName == "npc_dota_hero_puck" then 
         local skill = NPC.GetAbility(myHero, "puck_phase_shift")
-        if skill and Ability.IsReady(skill) then 
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastNoTarget(skill)
+            dodged = true
+        end 
+    end 
+    if myName == "npc_dota_hero_bane" then 
+        local skill = NPC.GetAbility(myHero, "bane_nightmare")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastTarget(skill,myHero)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_omniknight" then 
+        local skill = NPC.GetAbility(myHero, "omniknight_repel")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastTarget(skill,myHero)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_shadow_demon" then 
+        local skill = NPC.GetAbility(myHero, "shadow_demon_disruption")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastTarget(skill,myHero)
+            dodged = true
+        end 
+    end
+    
+    if myName == "npc_dota_hero_obsidian_destroyer" then 
+        local skill = NPC.GetAbility(myHero, "obsidian_destroyer_astral_imprisonment")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastTarget(skill,myHero)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_abaddon" then 
+        local skill = NPC.GetAbility(myHero, "abaddon_aphotic_shield")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastTarget(skill,myHero)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_life_stealer" then 
+        local skill = NPC.GetAbility(myHero, "life_stealer_rage")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
             Ability.CastNoTarget(skill)
             dodged = true
         end 
     end
+    if myName == "npc_dota_hero_sand_king" then 
+        local skill = NPC.GetAbility(myHero, "sandking_sand_storm")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastNoTarget(skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_juggernaut" then 
+        local skill = NPC.GetAbility(myHero, "juggernaut_blade_fury")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastNoTarget(skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_clinkz" then 
+        local skill = NPC.GetAbility(myHero, "clinkz_wind_walk")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastNoTarget(skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_alchemist" then 
+        local skill = NPC.GetAbility(myHero, "alchemist_chemical_rage")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastNoTarget(skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_nyx_assassin" then 
+        local skill = NPC.GetAbility(myHero, "nyx_assassin_spiked_carapace")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastNoTarget(skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_slark" then 
+        local skill = NPC.GetAbility(myHero, "slark_dark_pact")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastNoTarget(skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_bounty_hunter" then 
+        local skill = NPC.GetAbility(myHero, "bounty_hunter_wind_walk")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastNoTarget(skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_weaver" then 
+        local skill = NPC.GetAbility(myHero, "weaver_shukuchi")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastNoTarget(skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_medusa" then 
+        local skill = NPC.GetAbility(myHero, "medusa_mana_shield")
+        if skill and not NPC.HasModifier(myHero, "modifier_medusa_mana_shield") and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.Toggle(skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_templar_assassin" then 
+        local skill = NPC.GetAbility(myHero, "templar_assassin_meld")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastNoTarget(skill)
+            dodged = true
+        end
+        skill = NPC.GetAbility(myHero, "templar_assassin_refraction")
+        if not dodged and skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            Ability.CastNoTarget(skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_morphling" then 
+        local skill = NPC.GetAbility(myHero, "morphling_waveform")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then
+            AutoDodger2.DodgeByMoveToForward(myHero, 1000, skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_storm_spirit" then 
+        local skill = NPC.GetAbility(myHero, "storm_spirit_ball_lightning")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then
+            AutoDodger2.DodgeByMoveForward(myHero, 200, skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_queenofpain" then 
+        local skill = NPC.GetAbility(myHero, "queenofpain_blink")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then
+            AutoDodger2.DodgeByMoveToForward(myHero, 1000, skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_faceless_void" then 
+        local skill = NPC.GetAbility(myHero, "faceless_void_time_walk")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then
+            AutoDodger2.DodgeByMoveToForward(myHero, 1000, skill)
+            dodged = true
+        end 
+    end
+    if myName == "npc_dota_hero_phantom_lancer" then 
+        local skill = NPC.GetAbility(myHero, "phantom_lancer_doppelwalk")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then
+            AutoDodger2.DodgeByMoveToForward(myHero, 600, skill)
+            dodged = true
+        end 
+    end
 
-    if NPC.GetUnitName(myHero) == "npc_dota_hero_ember_spirit" then 
+    -- if myName == "npc_dota_hero_lone_druid" then 
+    --     local skill = NPC.GetAbility(myHero, "lone_druid_true_form")
+    --     if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+    --         Ability.CastNoTarget(skill)
+    --         dodged = true
+    --     end 
+    --     skill = NPC.GetAbility(myHero, "lone_druid_true_form_druid")
+    --     if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+    --         Ability.CastNoTarget(skill)
+    --         dodged = true
+    --     end
+    -- end
+    -- if myName == "npc_dota_hero_riki" then 
+    --     local skill = NPC.GetAbility(myHero, "riki_blink_strike")
+    --     if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+    --         AutoDodger2.DodgeByAttackNearUnits(myHero, 800, skill)
+    --     end 
+    -- end
+    if myName ==  "npc_dota_hero_tusk" then 
+        local skill = NPC.GetAbility(myHero, "tusk_snowball")
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
+            AutoDodger2.DodgeByAttackNearUnits(myHero, 1250, skill)
+        end 
+    end
+    if myName == "npc_dota_hero_ember_spirit" then 
         local skill = NPC.GetAbility(myHero, "ember_spirit_sleight_of_fist")
         local level = Ability.GetLevel(skill)
         local range = 700
         local fistRadius = {250,350,450,550} 
         local radius = range + fistRadius[level]
 
-        if skill and Ability.IsReady(skill) then
+        if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
             local units = NPC.GetUnitsInRadius(myHero, radius, Enum.TeamType.TEAM_ENEMY)
             if #units >0 then 
                 local candidate
@@ -110,6 +289,47 @@ function AutoDodger2.DodgeLogicProjectile()
     end
 
 end 
+
+function AutoDodger2.DodgeByAttackNearUnits(myHero, radius, skill)
+    local units = NPC.GetUnitsInRadius(myHero, radius, Enum.TeamType.TEAM_ENEMY)
+    local dodged = false
+    if #units >0 then 
+        local candidate
+        for i =1, #units do
+            if (NPC.IsCreep(units[i]) or NPC.IsHero(units[i]))  and Entity.IsAlive(units[i]) then
+                candidate = units[i]
+                break 
+            end  
+        end 
+        if candidate then 
+            Ability.CastTarget(skill,candidate)
+            dodged = true
+        end 
+    end 
+    return dodged
+end 
+
+function AutoDodger2.DodgeByMoveToBase(myHero, distance, skill)
+    AutoDodger2.fountainPos = AutoDodger2.GetFountainPosition(Entity.GetTeamNum(myHero))
+    local myPos = Entity.GetAbsOrigin(myHero)
+    local vec = AutoDodger2.fountainPos - myPos
+    vec=vec:Normalized()
+    vec=vec:Scaled(distance-1)
+    vec = vec + myPos 
+    Ability.CastPosition(skill, vec)
+end 
+
+function AutoDodger2.DodgeByMoveForward(myHero, distance, skill)
+    local myPos = Entity.GetAbsOrigin(myHero)
+    local angle = Entity.GetRotation(myHero)
+    local angleOffset = Angle(0, 45, 0)
+    angle:SetYaw(angle:GetYaw() + angleOffset:GetYaw())
+    local x,y,z = angle:GetVectors()
+    local direction = x + y + z
+    direction = direction:Scaled(distance)
+    direction = myPos + direction
+    Ability.CastPosition(skill, direction)
+end        
 --------------------------------------------------------------------------------------------------------
 function AutoDodger2.InsertIgnoredProjectile(name)
     AutoDodger2.ignoredProjectileNames[name] = true
@@ -124,6 +344,19 @@ function AutoDodger2.Reset()
     AutoDodger2.activeProjectiles = {}
     AutoDodger2.nextDodgeTime = 0.0
     AutoDodger2.canReset = false
+end
+
+function AutoDodger2.GetFountainPosition(teamNum)
+    for i = 1, NPCs.Count() do 
+        local npc = NPCs.Get(i)
+
+        if Entity.GetTeamNum(npc) == teamNum and NPC.IsStructure(npc) then
+            local name = NPC.GetUnitName(npc)
+            if name ~= nil and name == "dota_fountain" then
+                return NPC.GetAbsOrigin(npc)
+            end
+        end
+    end
 end
 
 function AutoDodger2.GetRange(index)
@@ -176,7 +409,6 @@ function AutoDodger2.OnLinearProjectileCreate(projectile)
     if not projectile.source then return end
 
     if Entity.IsSameTeam(Heroes.GetLocal(), projectile.source) then return end
-    Log.Write(projectile.name)
     local shouldIgnore = AutoDodger2.ignoredProjectileHashes[projectile.particleIndex]
 
     if shouldIgnore == true then 
@@ -271,7 +503,6 @@ function AutoDodger2.ProcessProjectile()
 
     if min~= 999999999 then 
         AutoDodger2.nextDodgeTimeProjectile = min
-        Log.Write(GameRules.GetGameTime()..":"..min)
     end 
 
     local curtime = GameRules.GetGameTime()

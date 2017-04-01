@@ -4,6 +4,7 @@ AutoDodger2.option = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Auto Dodg
 AutoDodger2.impactRadiusOption = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Impact Radius", "",100,1000,100)
 AutoDodger2.impactDistanceOption = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Safe Distance offset", "",100,2000,100)
 -- logic for specific particle effects will go here.
+AutoDodger2.optionKey = Menu.AddKeyOption({ "Utility","Super Auto Dodger"}, "Choose Skills to Disable",Enum.ButtonCode.KEY_Z)
 AutoDodger2.particleLogic = 
 {
      require("AutoDodger2/PudgeLogic")--,
@@ -26,6 +27,45 @@ AutoDodger2.fountainPos = Vector()
 AutoDodger2.active = false
 
 AutoDodger2.mapFont = Renderer.LoadFont("Tahoma", 50, Enum.FontWeight.NORMAL)
+
+AutoDodger2.skillOption = Menu.AddOption({ "Utility", "Super Auto Dodger", "Skill Picker"}, "Enable", "Displays enemy hero cooldowns in an easy and intuitive way.")
+AutoDodger2.boxSizeOption = Menu.AddOption({ "Utility", "Super Auto Dodger", "Skill Picker" }, "Display Size", "", 21, 64, 1)
+AutoDodger2.needsInit = true
+AutoDodger2.spellIconPath = "resource/flash3/images/spellicons/"
+AutoDodger2.cachedIcons = {}
+AutoDodger2.w = 1920
+AutoDodger2.h = 1080
+AutoDodger2.colors = {}
+AutoDodger2.skillSelected = {}
+
+function AutoDodger2.InsertColor(alias, r_, g_, b_)
+    table.insert(AutoDodger2.colors, { name = alias, r = r_, g = g_, b = b_})
+end
+
+AutoDodger2.InsertColor("Green", 0, 255, 0)
+AutoDodger2.InsertColor("Yellow", 234, 255, 0)
+AutoDodger2.InsertColor("Red", 255, 0, 0)
+AutoDodger2.InsertColor("Blue", 0, 0, 255)
+AutoDodger2.InsertColor("White", 255, 255, 255)
+AutoDodger2.InsertColor("Black", 0, 0, 0)
+
+AutoDodger2.levelColorOption = Menu.AddOption({ "Utility", "Super Auto Dodger","Skill Picker" }, "Level Color", "", 1, #AutoDodger2.colors, 1)
+
+for i, v in ipairs(AutoDodger2.colors) do
+    Menu.SetValueName(AutoDodger2.levelColorOption, i, v.name)
+end
+
+function AutoDodger2.InitDisplay()
+    AutoDodger2.boxSize = Menu.GetValue(AutoDodger2.boxSizeOption)
+    AutoDodger2.innerBoxSize = AutoDodger2.boxSize - 2
+    AutoDodger2.levelBoxSize = math.floor(AutoDodger2.boxSize * 0.1875)
+
+    AutoDodger2.font = Renderer.LoadFont("Tahoma", math.floor(AutoDodger2.innerBoxSize * 0.643), Enum.FontWeight.BOLD)
+    local w, h = Renderer.GetScreenSize()
+    AutoDodger2.w = math.floor(w/2)
+    AutoDodger2.h = math.floor(h/2)
+end
+
 -------------------------------------------------------------------------------------------------------
 function AutoDodger2.OnUpdate()
     --Log.Write(AutoDodger2.nextDodgeTimeProjectile..', '..GameRules.GetGameTime())
@@ -33,6 +73,7 @@ function AutoDodger2.OnUpdate()
     if not Menu.IsEnabled(AutoDodger2.option) then return end
     AutoDodger2.ProcessLinearProjectile()
     AutoDodger2.ProcessProjectile()
+    AutoDodger2.ProcessChoosingSkills()
 end
 
 --------------------------------------------------------------------------------------------------------
@@ -344,6 +385,9 @@ function AutoDodger2.Reset()
     AutoDodger2.activeProjectiles = {}
     AutoDodger2.nextDodgeTime = 0.0
     AutoDodger2.canReset = false
+    AutoDodger2.skillSelected ={}
+    AutoDodger2.queueLength = 0
+    AutoDodger2.projectileQueue={}
 end
 
 function AutoDodger2.GetFountainPosition(teamNum)
@@ -600,6 +644,11 @@ function AutoDodger2.ProcessLinearProjectile()
     AutoDodger2.nextDodgeTime = GameRules.GetGameTime() + NetChannel.GetAvgLatency(Enum.Flow.FLOW_OUTGOING) + 0.2
     AutoDodger2.active = true
 end 
+
+function AutoDodger2.ProcessChoosingSkills()
+    if not Menu.IsKeyDownOnce(AutoDodger2.optionKey) then return end 
+    Log.Write("hey")
+end 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function AutoDodger2.OnDraw()
     if not Engine.IsInGame() or not Menu.IsEnabled(AutoDodger2.option) then
@@ -607,8 +656,139 @@ function AutoDodger2.OnDraw()
         return
     end
     local myHero = Heroes.GetLocal()
+    if not Menu.IsEnabled(AutoDodger2.skillOption) then return end
+
+    local myHero = Heroes.GetLocal()
+
+    if not myHero then return end
+
+    if AutoDodger2.needsInit then
+        AutoDodger2.InitDisplay()
+        AutoDodger2.needsInit = false
+    end
+    local EnemyCount = 0
+    for i = 1, Heroes.Count() do
+        local hero = Heroes.Get(i)
+        
+        if not Entity.IsSameTeam(myHero, hero) and not NPC.IsIllusion(hero) then
+            EnemyCount = EnemyCount + 1
+            AutoDodger2.DrawDisplay(hero, AutoDodger2.w, AutoDodger2.h - (EnemyCount-1)*AutoDodger2.boxSize)
+        end
+    end
     --Log.Write(Entity.GetRotation(myHero):__tostring())
 end
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+function AutoDodger2.OnMenuOptionChange(option, old, new)
+    if option == AutoDodger2.boxSizeOption then
+        AutoDodger2.InitDisplay()
+    end
+end
+
+function AutoDodger2.DrawDisplay(hero, x,y)
+
+    local abilities = {}
+
+    for i = 0, 24 do
+        local ability = NPC.GetAbilityByIndex(hero, i)
+
+        if ability ~= nil and Entity.IsAbility(ability) and not Ability.IsHidden(ability) and not Ability.IsAttributes(ability) then
+            table.insert(abilities, ability)
+        end
+    end
+
+    local startX = x - math.floor((#abilities / 2) * AutoDodger2.boxSize)
+
+    -- black background
+    Renderer.SetDrawColor(0, 0, 0, 150)
+    Renderer.DrawFilledRect(startX + 1, y - 1, (AutoDodger2.boxSize * #abilities) + 2, AutoDodger2.boxSize + 2)
+
+    -- draw the actual ability squares now
+    for i, ability in ipairs(abilities) do
+        AutoDodger2.DrawAbilitySquare(hero, ability, startX, y, i - 1)
+    end
+
+    -- black border
+    Renderer.SetDrawColor(0, 0, 0, 255)
+    Renderer.DrawOutlineRect(startX + 1, y - 1, (AutoDodger2.boxSize * #abilities) + 2, AutoDodger2.boxSize + 2)
+end
+
+function AutoDodger2.DrawAbilitySquare(hero, ability, x, y, index)
+    local abilityName = Ability.GetName(ability)
+    local imageHandle = AutoDodger2.cachedIcons[abilityName]
+
+    if imageHandle == nil then
+        imageHandle = Renderer.LoadImage(AutoDodger2.spellIconPath .. abilityName .. ".png")
+        AutoDodger2.cachedIcons[abilityName] = imageHandle
+    end
+
+    local realX = x + (index * AutoDodger2.boxSize) + 2
+
+    -- default colors = can cast
+    local imageColor = { 255, 255, 255 }
+    local outlineColor = { 0, 255 , 0 }
+    local hoveringOver = Input.IsCursorInRect(realX, y, AutoDodger2.boxSize, AutoDodger2.boxSize)
+    if not hoveringOver then
+        --if Ability.GetLevel(ability) == 0 then
+            imageColor = { 125, 125, 125 }
+            outlineColor = { 255, 0, 0 }
+       -- elseif Ability.GetManaCost(ability) > NPC.GetMana(hero) then
+            --imageColor = { 150, 150, 255 }
+           -- outlineColor = { 0, 0, 255 }
+        --else
+            --imageColor = { 255, 150, 150 }
+            --outlineColor = { 255, 0, 0 }
+        --end
+    end
+
+    if hoveringOver and Input.IsKeyDownOnce(Enum.ButtonCode.MOUSE_LEFT) then
+        Log.Write(abilityName)
+        AutoDodger2.skillSelected[abilityName] = not AutoDodger2.skillSelected[abilityName]
+    end
+
+    if  AutoDodger2.skillSelected[abilityName] == true then 
+        imageColor = { 255, 255, 255 }
+        outlineColor = { 0, 255 , 0 }
+    end 
+
+    Renderer.SetDrawColor(imageColor[1], imageColor[2], imageColor[3], 255)
+    Renderer.DrawImage(imageHandle, realX, y, AutoDodger2.boxSize, AutoDodger2.boxSize)
+
+    Renderer.SetDrawColor(outlineColor[1], outlineColor[2], outlineColor[3], 255)
+    Renderer.DrawOutlineRect(realX, y, AutoDodger2.boxSize, AutoDodger2.boxSize)
+
+    -- local cdLength = Ability.GetCooldownLength(ability)
+
+    -- if not Ability.IsReady(ability) and cdLength > 0.0 then
+    --     local cooldownRatio = Ability.GetCooldown(ability) / cdLength
+    --     local cooldownSize = math.floor(AutoDodger2.innerBoxSize * cooldownRatio)
+
+    --     Renderer.SetDrawColor(255, 255, 255, 50)
+    --     Renderer.DrawFilledRect(realX + 1, y + (AutoDodger2.innerBoxSize - cooldownSize) + 1, AutoDodger2.innerBoxSize, cooldownSize)
+
+    --     Renderer.SetDrawColor(255, 255, 255)
+    --     Renderer.DrawText(AutoDodger2.font, realX + 1, y, math.floor(Ability.GetCooldown(ability)), 0)
+    -- end
+
+    -- AutoDodger2.DrawAbilityLevels(ability, realX, y)
+end
+
+function AutoDodger2.DrawAbilityLevels(ability, x, y)
+    local level = Ability.GetLevel(ability)
+
+    x = x + 1
+    y = ((y + AutoDodger2.boxSize) - AutoDodger2.levelBoxSize) - 1
+
+    local color = AutoDodger2.colors[Menu.GetValue(AutoDodger2.levelColorOption)]
+
+    for i = 1, level do
+        Renderer.SetDrawColor(color.r, color.g, color.b, 255)
+        Renderer.DrawFilledRect(x + ((i - 1) * AutoDodger2.levelBoxSize), y, AutoDodger2.levelBoxSize, AutoDodger2.levelBoxSize)
+        
+        Renderer.SetDrawColor(0, 0, 0, 255)
+        Renderer.DrawOutlineRect(x + ((i - 1) * AutoDodger2.levelBoxSize), y, AutoDodger2.levelBoxSize, AutoDodger2.levelBoxSize)
+    end
+end
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 AutoDodger2.skillMap = {}
 AutoDodger2.skillMap["pudge_meathook"] = {{"pudge_meat_hook"}, {1000,1100,1200,1300}}

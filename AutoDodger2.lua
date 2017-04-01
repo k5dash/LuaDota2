@@ -1,10 +1,13 @@
 local AutoDodger2 = {}
 
 AutoDodger2.option = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Auto Dodger", "Automatically dodges projectiles.")
-AutoDodger2.impactRadiusOption = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Impact Radius", "",100,1000,100)
-AutoDodger2.impactDistanceOption = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Safe Distance offset", "",100,2000,100)
+AutoDodger2.linearOption = Menu.AddOption({"Utility", "Super Auto Dodger", "Dodge Linear Projectiles"}, "Enable", "")
+AutoDodger2.impactRadiusOption = Menu.AddOption({"Utility", "Super Auto Dodger", "Dodge Linear Projectiles"}, "Impact Radius", "",100,1000,100)
+AutoDodger2.disjointOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Disjoint"}, "Enable", "")
+AutoDodger2.impactDistanceOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Disjoint"}, "Safe Distance offset", "",100,2000,100)
+AutoDodger2.animationOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Animation"}, "Enable", "")
+AutoDodger2.castPointOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Animation"}, "CastPoint Offset", "", 1,10,1 )
 -- logic for specific particle effects will go here.
-AutoDodger2.optionKey = Menu.AddKeyOption({ "Utility","Super Auto Dodger"}, "Choose Skills to Disable",Enum.ButtonCode.KEY_Z)
 AutoDodger2.particleLogic = 
 {
      require("AutoDodger2/PudgeLogic")--,
@@ -16,12 +19,16 @@ AutoDodger2.knownRanges = {}
 AutoDodger2.ignoredProjectileNames = {}
 AutoDodger2.ignoredProjectileHashes = {}
 AutoDodger2.projectileQueue ={}
-AutoDodger2.queueLength = 0.0
+AutoDodger2.projectileQueueLength = 0.0
 AutoDodger2.impactRadius = 400
 AutoDodger2.canReset = true
+AutoDodger2.AnimationQueue ={}
+AutoDodger2.AnimationQueueLength = 0
 
 AutoDodger2.nextDodgeTime = 0.0
 AutoDodger2.nextDodgeTimeProjectile = 0.0
+AutoDodger2.nextDodgeTimeAnimation = 0.0
+
 AutoDodger2.movePos = Vector()
 AutoDodger2.fountainPos = Vector()
 AutoDodger2.active = false
@@ -69,10 +76,11 @@ end
 -------------------------------------------------------------------------------------------------------
 function AutoDodger2.OnUpdate()
     --Log.Write(AutoDodger2.nextDodgeTimeProjectile..', '..GameRules.GetGameTime())
-    --Log.Write(AutoDodger2.queueLength)
+    --Log.Write(AutoDodger2.projectileQueueLength)
     if not Menu.IsEnabled(AutoDodger2.option) then return end
     AutoDodger2.ProcessLinearProjectile()
     AutoDodger2.ProcessProjectile()
+    AutoDodger2.ProcessAnimation()
     AutoDodger2.ProcessChoosingSkills()
 end
 
@@ -386,7 +394,8 @@ function AutoDodger2.Reset()
     AutoDodger2.nextDodgeTime = 0.0
     AutoDodger2.canReset = false
     AutoDodger2.skillSelected ={}
-    AutoDodger2.queueLength = 0
+    AutoDodger2.projectileQueueLength = 0
+    AutoDodger2.AnimationQueueLength = 0
     AutoDodger2.projectileQueue={}
 end
 
@@ -412,7 +421,8 @@ function AutoDodger2.GetRange(index)
 end
 
 function AutoDodger2.OnProjectile(projectile)
-    if not Menu.IsEnabled(AutoDodger2.option) then return end
+    if not Menu.IsEnabled(AutoDodger2.option) then return end 
+    if not Menu.IsEnabled(AutoDodger2.disjointOption) then return end
     if not projectile.source or projectile.isAttack then return end
     local myHero = Heroes.GetLocal()
     local enemy = projectile.source
@@ -445,11 +455,12 @@ function AutoDodger2.OnProjectile(projectile)
         dodgeTime = delay + GameRules.GetGameTime(),
         name = projectile.name,
     }
-    AutoDodger2.queueLength = AutoDodger2.queueLength + 1
+    AutoDodger2.projectileQueueLength = AutoDodger2.projectileQueueLength + 1
 end
 
 function AutoDodger2.OnLinearProjectileCreate(projectile)
-    if not Menu.IsEnabled(AutoDodger2.option) then return end
+    if not Menu.IsEnabled(AutoDodger2.option) then return end 
+    if not Menu.IsEnabled(AutoDodger2.linearOption) then return end
     if not projectile.source then return end
 
     if Entity.IsSameTeam(Heroes.GetLocal(), projectile.source) then return end
@@ -478,7 +489,7 @@ end
 
 function AutoDodger2.OnLinearProjectileDestroy(projectile)
     if not Menu.IsEnabled(AutoDodger2.option) then return end
-
+    if not Menu.IsEnabled(AutoDodger2.linearOption) then return end
     local projectileData = AutoDodger2.activeProjectiles[projectile.handle]
 
     if not projectileData then return end
@@ -498,7 +509,32 @@ function AutoDodger2.OnLinearProjectileDestroy(projectile)
     AutoDodger2.activeProjectiles[projectile.handle] = nil
 end
 --------------------------------------------------------------------------------------------------
+function AutoDodger2.OnUnitAnimation(animation)
+    if not Menu.IsEnabled(AutoDodger2.option) then return end
+    if not animation or not animation.unit then return end
+
+    local myHero = Heroes.GetLocal()
+    if not myHero or Entity.IsSameTeam(myHero, animation.unit) or not NPC.IsHero(animation.unit) then return end
+    Log.Write(animation.sequenceName)
+    local sequenceName = animation.sequenceName
+        Log.Write(animation.castpoint)
+    local enemy = animation.unit
+    local enemyName = NPC.GetUnitName(animation.unit)
+
+    if AutoDodger2.animationMap[sequenceName] then
+        AutoDodger2.AnimationQueue[sequenceName] ={
+            time = GameRules.GetGameTime()+animation.castpoint,
+            sequenceName = sequenceName,
+            enemy = enemy,
+            enemyName = enemyName,
+            castPoint = animation.castpoint
+        }
+        AutoDodger2.AnimationQueueLength = AutoDodger2.AnimationQueueLength + 1
+    end 
+end 
+--------------------------------------------------------------------------------------------------
 function AutoDodger2.OnParticleCreate(particle)
+    --Log.Write(particle.name)
     if not Menu.IsEnabled(AutoDodger2.option) then return end
     for i, v in ipairs(AutoDodger2.particleLogic) do
         v:OnParticleCreate(particle, AutoDodger2.activeProjectiles)
@@ -531,6 +567,7 @@ end
 ------------------------------------------------------------------------------------------------------
 function AutoDodger2.ProcessProjectile()
     local min = 999999999
+    local candidateKey = nil
     for k,v in pairs(AutoDodger2.projectileQueue) do  
         local myPos = Entity.GetAbsOrigin(v.target)
         local enemyPos = v.origin
@@ -541,8 +578,10 @@ function AutoDodger2.ProcessProjectile()
         local delay = (distanceLenth/v.moveSpeed) 
         delay = math.max(delay, 0.00)
         AutoDodger2.projectileQueue[k].dodgeTime = delay + v.time
-        Log.Write(delay)
-        min = math.min(v.dodgeTime, min)
+        if v.dodgeTime< min then 
+            min = v.dodgeTime
+            candidateKey=k
+        end 
     end
 
     if min~= 999999999 then 
@@ -552,25 +591,16 @@ function AutoDodger2.ProcessProjectile()
     local curtime = GameRules.GetGameTime()
 
     if curtime< AutoDodger2.nextDodgeTimeProjectile  then return end
-    if AutoDodger2.queueLength  == 0 then return end 
+    if AutoDodger2.projectileQueueLength  == 0 then return end 
     local myHero = Heroes.GetLocal()
     if not Entity.IsAlive(myHero) then return end
 
-    local minimum = 9999999999
-    local candidateKey = nil
-    for k,v in pairs(AutoDodger2.projectileQueue) do 
-        if v.dodgeTime < minimum then 
-            minimum = v.dodgeTime
-            candidateKey = k
-        end 
-    end  
     if candidateKey then 
         AutoDodger2.projectileQueue[candidateKey] = nil
-        AutoDodger2.queueLength = AutoDodger2.queueLength - 1
+        AutoDodger2.projectileQueueLength = AutoDodger2.projectileQueueLength - 1
     end 
     AutoDodger2.DodgeLogicProjectile()
-    AutoDodger2.nextDodgeTimeProjectile = minimum
-    table.remove(AutoDodger2.projectileQueue,minimumI)
+    AutoDodger2.nextDodgeTimeProjectile = min
 end
 
 function AutoDodger2.ProcessLinearProjectile()
@@ -646,9 +676,58 @@ function AutoDodger2.ProcessLinearProjectile()
 end 
 
 function AutoDodger2.ProcessChoosingSkills()
-    if not Menu.IsKeyDownOnce(AutoDodger2.optionKey) then return end 
-    Log.Write("hey")
+
 end 
+
+function AutoDodger2.ProcessAnimation()
+    if not Menu.IsEnabled(AutoDodger2.option) then return end 
+    if not Menu.IsEnabled(AutoDodger2.animationOption) then return end 
+    local myHero = Heroes.GetLocal()
+    if not myHero then return end 
+
+    local min = 999999999
+    local candidateKey = nil
+    --Log.Write(AutoDodger2.AnimationQueueLength)
+    for k,v in pairs(AutoDodger2.AnimationQueue) do   
+        local skillName = AutoDodger2.animationMap[v.sequenceName].ability
+        local skill = NPC.GetAbility(v.enemy, skillName)
+        if not Ability.IsInAbilityPhase(skill) then
+            AutoDodger2.AnimationQueue[k]=nil
+            AutoDodger2.AnimationQueueLength =AutoDodger2.AnimationQueueLength -1
+        else
+            if min>v.time then 
+                min = v.time
+                candidateKey = k
+            end 
+        end 
+    end
+
+    if candidateKey then 
+        AutoDodger2.nextDodgeTimeAnimation = min
+    end 
+
+    local curtime = GameRules.GetGameTime()
+
+    if curtime < AutoDodger2.nextDodgeTimeAnimation-Menu.GetValue(AutoDodger2.castPointOption)/40  then return end
+    if AutoDodger2.AnimationQueueLength == 0 then return end 
+    local myHero = Heroes.GetLocal()
+    if not Entity.IsAlive(myHero) then return end
+
+    if candidateKey then 
+        AutoDodger2.AnimationQueue[candidateKey] = nil
+        AutoDodger2.AnimationQueueLength = AutoDodger2.AnimationQueueLength - 1
+    end 
+    AutoDodger2.DodgeLogicProjectile()
+    AutoDodger2.nextDodgeTimeAnimation= min
+end 
+
+        -- AutoDodger2.AnimationQueue[skillName] ={
+        --     time = GameRules.GetGameTime(),
+        --     sequenceName = sequenceName,
+        --     enemy = enemy,
+        --     enemyName = enemyName,
+        --     castPoint = unit.castpoint
+        -- }
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function AutoDodger2.OnDraw()
     if not Engine.IsInGame() or not Menu.IsEnabled(AutoDodger2.option) then
@@ -741,7 +820,6 @@ function AutoDodger2.DrawAbilitySquare(hero, ability, x, y, index)
     end
 
     if hoveringOver and Input.IsKeyDownOnce(Enum.ButtonCode.MOUSE_LEFT) then
-        Log.Write(abilityName)
         AutoDodger2.skillSelected[abilityName] = not AutoDodger2.skillSelected[abilityName]
     end
 
@@ -790,7 +868,16 @@ function AutoDodger2.DrawAbilityLevels(ability, x, y)
 end
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-AutoDodger2.skillMap = {}
-AutoDodger2.skillMap["pudge_meathook"] = {{"pudge_meat_hook"}, {1000,1100,1200,1300}}
+AutoDodger2.projectileMap = {}
+AutoDodger2.projectileMap["pudge_meathook"] = {ability="pudge_meat_hook", castRange={1000,1100,1200,1300}, radius={0,0,0,0}}
 
+AutoDodger2.animationMap ={}
+AutoDodger2.animationMap['chronosphere_anim']={ability="faceless_void_chronosphere", castRange={600,600,600,600}, radius={425,425,425,425}}
+AutoDodger2.animationMap['cast_time_dilation']={ability="faceless_void_time_dilation", castRange={0,0,0,0}, radius={725,725,725,725}}
+AutoDodger2.animationMap['impale_anim']={ability="lion_impale", castRange={500,500,500,500}, radius={125,125,125,125}}
+AutoDodger2.animationMap['shield_storm_bolt']={ability="sven_storm_bolt", castRange={600,600,600,600}, radius={125,125,125,125}}
+AutoDodger2.animationMap['cast_purification_anim']={ability="omniknight_purification", castRange={600,600,600,600}, radius={125,125,125,125}}
+AutoDodger2.animationMap['cast4_primal_roar_anim']={ability="beastmaster_primal_roar", castRange={600,600,600,600}, radius={0,0,0,0}}
+AutoDodger2.animationMap['legion_commander_duel_anim']={ability="legion_commander_duel", castRange={150,150,150,150}, radius={0,0,0,0}}
+AutoDodger2.animationMap['cast1_hellfire_blast']={ability="skeleton_king_hellfire_blast", castRange={525,525,525,525}, radius={0,0,0,0}}
 return AutoDodger2

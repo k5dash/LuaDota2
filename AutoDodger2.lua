@@ -32,6 +32,7 @@ AutoDodger2.nextDodgeTimeAnimation = 0.0
 AutoDodger2.movePos = Vector()
 AutoDodger2.fountainPos = Vector()
 AutoDodger2.active = false
+AutoDodger2.drawPos = nil
 
 AutoDodger2.mapFont = Renderer.LoadFont("Tahoma", 50, Enum.FontWeight.NORMAL)
 
@@ -226,7 +227,7 @@ function AutoDodger2.DodgeLogicProjectile()
     if myName == "npc_dota_hero_morphling" then 
         local skill = NPC.GetAbility(myHero, "morphling_waveform")
         if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then
-            AutoDodger2.DodgeByMoveToForward(myHero, 1000, skill)
+            AutoDodger2.DodgeByMoveForward(myHero, 1000, skill)
             dodged = true
         end 
     end
@@ -240,21 +241,21 @@ function AutoDodger2.DodgeLogicProjectile()
     if myName == "npc_dota_hero_queenofpain" then 
         local skill = NPC.GetAbility(myHero, "queenofpain_blink")
         if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then
-            AutoDodger2.DodgeByMoveToForward(myHero, 1000, skill)
+            AutoDodger2.DodgeByMoveForward(myHero, 1000, skill)
             dodged = true
         end 
     end
     if myName == "npc_dota_hero_faceless_void" then 
         local skill = NPC.GetAbility(myHero, "faceless_void_time_walk")
         if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then
-            AutoDodger2.DodgeByMoveToForward(myHero, 1000, skill)
+            AutoDodger2.DodgeByMoveForward(myHero, 1000, skill)
             dodged = true
         end 
     end
     if myName == "npc_dota_hero_phantom_lancer" then 
         local skill = NPC.GetAbility(myHero, "phantom_lancer_doppelwalk")
         if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then
-            AutoDodger2.DodgeByMoveToForward(myHero, 600, skill)
+            AutoDodger2.DodgeByMoveForward(myHero, 600, skill)
             dodged = true
         end 
     end
@@ -515,12 +516,12 @@ function AutoDodger2.OnUnitAnimation(animation)
 
     local myHero = Heroes.GetLocal()
     if not myHero or Entity.IsSameTeam(myHero, animation.unit) or not NPC.IsHero(animation.unit) then return end
-    Log.Write(animation.sequenceName)
+    
     local sequenceName = animation.sequenceName
-        Log.Write(animation.castpoint)
     local enemy = animation.unit
     local enemyName = NPC.GetUnitName(animation.unit)
 
+    Log.Write(animation.sequenceName)
     if AutoDodger2.animationMap[sequenceName] then
         AutoDodger2.AnimationQueue[sequenceName] ={
             time = GameRules.GetGameTime()+animation.castpoint,
@@ -604,6 +605,8 @@ function AutoDodger2.ProcessProjectile()
 end
 
 function AutoDodger2.ProcessLinearProjectile()
+    if not Menu.IsEnabled(AutoDodger2.linearOption) then return end
+
     local curtime = GameRules.GetGameTime()
 
     if curtime < AutoDodger2.nextDodgeTime then return end
@@ -615,46 +618,25 @@ function AutoDodger2.ProcessLinearProjectile()
     local myPos = Entity.GetAbsOrigin(myHero)
 
     local movePositions = {}
-    AutoDodger2.impactRadius = Menu.GetValue(AutoDodger2.impactRadiusOption)
 
     -- simulate projectiles.
     for k, v in pairs(AutoDodger2.activeProjectiles) do
         local t = curtime - v.time
+
         local projectileDir = v.velocity:Normalized()
-        -- local curPos = v.origin + v.velocity:Scaled(t)
-        -- local dir = (curPos - myPos)
-        -- local impactPos = curPos + projectileDir:Scaled(dir:Length2D())
-        -- local endPos = v.origin + projectileDir:Scaled(1225)
+        
+        local curPos = v.origin + v.velocity:Scaled(t)
 
-        local distance = myPos - v.origin
-        local projection = distance:Project(projectileDir)
-        local closestPoint = projection + v.origin
+        local dir = (curPos - myPos)
+        local impactPos = curPos + projectileDir:Scaled(dir:Length2D())
+        local endPos = v.origin + projectileDir:Scaled(AutoDodger2.GetRange(v.index))
 
-        -- local x, y, onScreen = Renderer.WorldToScreen(closestPoint)
-        -- Renderer.DrawTextCentered(AutoDodger2.mapFont, x, y, "Here", 1)
         -- do not dodge if ahead of the impact point, and do not dodge if ahead of the max range of the projectile.
-        -- if (impactPos - curPos):Dot(projectileDir) > 0 and (endPos - impactPos):Dot(projectileDir) > 0 and NPC.IsPositionInRange(myHero, impactPos, AutoDodger2.impactRadius) then 
-        --     local impactDir = (myPos - impactPos):Normalized()
+        if (impactPos - curPos):Dot(projectileDir) > 0 and (endPos - impactPos):Dot(projectileDir) > 0 and NPC.IsPositionInRange(myHero, impactPos, AutoDodger2.impactRadius) then 
+            local impactDir = (myPos - impactPos):Normalized()
 
-        --     table.insert(movePositions, impactPos + impactDir:Scaled(AutoDodger2.impactRadius + NPC.GetHullRadius(myHero) + 10))
-        -- end
-        local range = 1500
-        if v.name and v.range then
-            range = v.range +200
-        end 
-
-        local impactRadius = AutoDodger2.impactRadius
-        if v.impactRadius then 
-            impactRadius = v.impactRadius
-        end 
-
-         if projection:Length2D()<=range and NPC.IsPositionInRange(myHero, closestPoint, impactRadius) then 
-             local impactDir = (myPos - closestPoint):Normalized()
-             local myAngle = Entity.GetRotation(myHero)
-             local moveDir = impactDir:ToAngle()
-             table.insert(movePositions, myPos + impactDir:Scaled(AutoDodger2.impactRadius+NPC.GetHullRadius(myHero)))
-         end
-
+            table.insert(movePositions, impactPos + impactDir:Scaled(AutoDodger2.impactRadius + NPC.GetHullRadius(myHero) + 10))
+        end
     end
 
     if #movePositions == 0 then
@@ -671,9 +653,9 @@ function AutoDodger2.ProcessLinearProjectile()
     AutoDodger2.movePos = Vector(AutoDodger2.movePos:GetX() / #movePositions, AutoDodger2.movePos:GetY() / #movePositions, myPos:GetZ())
     Player.PrepareUnitOrders(Players.GetLocal(), Enum.UnitOrder.DOTA_UNIT_ORDER_MOVE_TO_POSITION, nil, AutoDodger2.movePos, nil, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, myHero, false, true)
 
-    AutoDodger2.nextDodgeTime = GameRules.GetGameTime() + NetChannel.GetAvgLatency(Enum.Flow.FLOW_OUTGOING) + 0.2
+    AutoDodger2.nextDodgeTime = GameRules.GetGameTime() + NetChannel.GetAvgLatency(Enum.Flow.FLOW_OUTGOING) + 0.03
     AutoDodger2.active = true
-end 
+end
 
 function AutoDodger2.ProcessChoosingSkills()
 
@@ -684,11 +666,14 @@ function AutoDodger2.ProcessAnimation()
     if not Menu.IsEnabled(AutoDodger2.animationOption) then return end 
     local myHero = Heroes.GetLocal()
     if not myHero then return end 
-
+    
+    AutoDodger2.OnOtherAnimationCreation()
+    Log.Write(AutoDodger2.AnimationQueueLength)
     local min = 999999999
     local candidateKey = nil
     --Log.Write(AutoDodger2.AnimationQueueLength)
-    for k,v in pairs(AutoDodger2.AnimationQueue) do   
+    for k,v in pairs(AutoDodger2.AnimationQueue) do
+           
         local skillName = AutoDodger2.animationMap[v.sequenceName].ability
         local skill = NPC.GetAbility(v.enemy, skillName)
         if not Ability.IsInAbilityPhase(skill) then
@@ -713,14 +698,74 @@ function AutoDodger2.ProcessAnimation()
     local myHero = Heroes.GetLocal()
     if not Entity.IsAlive(myHero) then return end
 
-    if candidateKey then 
+    
+    if candidateKey and AutoDodger2.isTargetMe(myHero, AutoDodger2.AnimationQueue[candidateKey].enemy, AutoDodger2.AnimationQueue[candidateKey].sequenceName ) then
+        AutoDodger2.DodgeLogicProjectile() 
         AutoDodger2.AnimationQueue[candidateKey] = nil
         AutoDodger2.AnimationQueueLength = AutoDodger2.AnimationQueueLength - 1
     end 
-    AutoDodger2.DodgeLogicProjectile()
     AutoDodger2.nextDodgeTimeAnimation= min
 end 
 
+function AutoDodger2.OnOtherAnimationCreation()
+    local myHero = Heroes.GetLocal()
+    local myTeam = Entity.GetTeamNum(myHero)
+
+    for i = 1, Heroes.Count() do
+        local hero = Heroes.Get(i)
+        if not NPC.IsIllusion(hero) then
+            local sameTeam = Entity.GetTeamNum(hero) == myTeam
+            if not sameTeam then
+                local enemyName = NPC.GetUnitName(hero)
+                if AutoDodger2.animationMap[enemyName] and not AutoDodger2.AnimationQueue[enemyName] then 
+                    local skill = NPC.GetAbility(hero, AutoDodger2.animationMap[enemyName].ability)
+                    if Ability.IsInAbilityPhase(skill) then 
+                        AutoDodger2.AnimationQueue[enemyName] ={
+                            time = GameRules.GetGameTime()+Ability.GetCastPoint(skill),
+                            sequenceName = enemyName,
+                            enemy = hero,
+                            enemyName = enemyName,
+                            castPoint = Ability.GetCastPoint(skill)
+                        }
+                        AutoDodger2.AnimationQueueLength = AutoDodger2.AnimationQueueLength + 1
+                    end 
+                end 
+            end
+        end
+    end
+end 
+
+-- AutoDodger2.AnimationQueue[sequenceName] ={
+--             time = GameRules.GetGameTime()+animation.castpoint,
+--             sequenceName = sequenceName,
+--             enemy = enemy,
+--             enemyName = enemyName,
+--             castPoint = animation.castpoint
+--         }
+function AutoDodger2.isTargetMe(myHero,enemy, sequenceName)
+    local angle = Entity.GetRotation(enemy)
+    local angleOffset = Angle(0, 45, 0)
+    angle:SetYaw(angle:GetYaw() + angleOffset:GetYaw())
+    local x,y,z = angle:GetVectors()
+    local direction = x + y + z
+    local name = NPC.GetUnitName(enemy)
+    direction:SetZ(0)
+    direction:Normalize()
+
+    local skillName = AutoDodger2.animationMap[sequenceName].ability
+    local skill = NPC.GetAbility(enemy, skillName)
+    local level = Ability.GetLevel(skill)
+    local castRange = AutoDodger2.animationMap[sequenceName].castRange[level]
+    local radius = AutoDodger2.animationMap[sequenceName].radius[level]
+    direction:Scale(castRange)
+    local origin = NPC.GetAbsOrigin(enemy)
+    local pos = direction + origin
+
+    AutoDodger2.drawPos = pos
+
+    if NPC.IsPositionInRange(myHero, pos, radius + NPC.GetHullRadius(myHero), 0) then return true end
+    return false
+end 
         -- AutoDodger2.AnimationQueue[skillName] ={
         --     time = GameRules.GetGameTime(),
         --     sequenceName = sequenceName,
@@ -754,6 +799,7 @@ function AutoDodger2.OnDraw()
             AutoDodger2.DrawDisplay(hero, AutoDodger2.w, AutoDodger2.h - (EnemyCount-1)*AutoDodger2.boxSize)
         end
     end
+
     --Log.Write(Entity.GetRotation(myHero):__tostring())
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -868,9 +914,6 @@ function AutoDodger2.DrawAbilityLevels(ability, x, y)
 end
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-AutoDodger2.projectileMap = {}
-AutoDodger2.projectileMap["pudge_meathook"] = {ability="pudge_meat_hook", castRange={1000,1100,1200,1300}, radius={0,0,0,0}}
-
 AutoDodger2.animationMap ={}
 AutoDodger2.animationMap['chronosphere_anim']={ability="faceless_void_chronosphere", castRange={600,600,600,600}, radius={425,425,425,425}}
 AutoDodger2.animationMap['cast_time_dilation']={ability="faceless_void_time_dilation", castRange={0,0,0,0}, radius={725,725,725,725}}
@@ -879,5 +922,8 @@ AutoDodger2.animationMap['shield_storm_bolt']={ability="sven_storm_bolt", castRa
 AutoDodger2.animationMap['cast_purification_anim']={ability="omniknight_purification", castRange={600,600,600,600}, radius={125,125,125,125}}
 AutoDodger2.animationMap['cast4_primal_roar_anim']={ability="beastmaster_primal_roar", castRange={600,600,600,600}, radius={0,0,0,0}}
 AutoDodger2.animationMap['legion_commander_duel_anim']={ability="legion_commander_duel", castRange={150,150,150,150}, radius={0,0,0,0}}
-AutoDodger2.animationMap['cast1_hellfire_blast']={ability="skeleton_king_hellfire_blast", castRange={525,525,525,525}, radius={0,0,0,0}}
+AutoDodger2.animationMap['cast1_hellfire_blast']={ castRange={525,525,525,525}, radius={0,0,0,0}}
+
+AutoDodger2.animationMap['npc_dota_hero_axe']={ability="axe_berserkers_call",castRange={0,0,0,0}, radius={300,300,300,300}}
+
 return AutoDodger2

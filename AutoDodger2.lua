@@ -431,7 +431,6 @@ function AutoDodger2.OnProjectile(projectile)
     local enemy = projectile.source
 
     if projectile.target ~= myHero then return end
-
     local myTeam = Entity.GetTeamNum(myHero)
     local enemyTeam = Entity.GetTeamNum(enemy)
 
@@ -765,11 +764,11 @@ function AutoDodger2.isTargetMe(myHero,enemy, sequenceName)
     local radius = AutoDodger2.animationMap[sequenceName].radius[level]
     local origin = NPC.GetAbsOrigin(enemy)
 
-    local pointsNum = math.floor(castRange/100) + 1
+    local pointsNum = math.floor(castRange/25) + 1
     for i = pointsNum,1,-1 do 
         direction:Normalize()
-        Log.Write(100*(i-1))
-        direction:Scale(100*(i-1))
+        Log.Write(25*(i-1))
+        direction:Scale(25*(i-1))
         Log.Write(direction:Length2D())
         local pos = direction + origin
 
@@ -986,9 +985,116 @@ AutoDodger2.animationMap['attack_omni_cast']={ability="juggernaut_omni_slash", c
 AutoDodger2.animationMapReverse["juggernaut_omni_slash"]={anim='attack_omni_cast', selected=fasle}
 AutoDodger2.animationMap['cast4_sirenSong_anim']={ability="naga_siren_song_of_the_siren", castRange={0,0,0,0}, radius={1250,1250,1250,1250}}
 AutoDodger2.animationMapReverse["naga_siren_song_of_the_siren"]={anim='cast4_sirenSong_anim', selected=fasle}
+AutoDodger2.animationMap['cast6_requiem_anim']={ability="nevermore_requiem", castRange={0,0,0,0}, radius={1425,1425,1425,1425}}
+AutoDodger2.animationMapReverse["nevermore_requiem"]={anim='cast6_requiem_anim', selected=fasle}
+AutoDodger2.animationMap['cast_savage_roar']={ability="lone_druid_savage_roar", castRange={0,0,0,0}, radius={325,325,325,325}}
+AutoDodger2.animationMapReverse["lone_druid_savage_roar"]={anim='cast_savage_roar', selected=fasle}
+AutoDodger2.animationMap['sunder']={ability="terrorblade_sunder", castRange={550,550,550,550}, radius={50,50,50,50}}
+AutoDodger2.animationMapReverse["terrorblade_sunder"]={anim='sunder', selected=fasle}
+AutoDodger2.animationMap['basher_cast4_mana_void_anim']={ability="antimage_mana_void", castRange={600,600,600,600}, radius={50,50,50,50}}
+AutoDodger2.animationMapReverse["antimage_mana_void"]={anim='basher_cast4_manma_void_anim', selected=fasle}
+AutoDodger2.animationMap['laser_anim']={ability="tinker_laser", castRange={650,650,650,650}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["tinker_laser"]={anim='laser_anim', selected=fasle}
+AutoDodger2.animationMapReverse[""]={anim='laser_anim', selected=fasle}
+AutoDodger2.animationMap['zeus_lightning_cast2_arcana']={ability="zuus_lightning_bolt", castRange={700,700,700,700}, radius={50,50,50,50}}
+AutoDodger2.animationMapReverse["zuus_lightning_bolt"]={anim='zeus_lightning_cast2_arcana', selected=fasle}
+AutoDodger2.animationMap['cast04_winters_curse_flying_low_anim']={ability="winter_wyvern_winters_curse", castRange={800,800,800,800}, radius={500,500,500,500}}
+AutoDodger2.animationMapReverse["winter_wyvern_winters_curse"]={anim='cast04_winters_curse_flying_low_anim', selected=fasle}
+AutoDodger2.animationMap['staff_split_earth_anim']={ability="leshrac_split_earth", castRange={750,750,750,750}, radius={150,175,200,225}}
+AutoDodger2.animationMapReverse["leshrac_split_earth"]={anim='staff_split_earth_anim', selected=fasle}
+AutoDodger2.animationMap['rubick_cast_fadebolt_anim']={ability="rubick_fade_bolt", castRange={800,800,800,800}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["rubick_fade_bolt"]={anim='rubick_cast_fadebolt_anim', selected=fasle}
+AutoDodger2.animationMap['staff_lightning_storm_anim']={ability="leshrac_lightning_storm", castRange={800,800,800,800}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["leshrac_lightning_storm"]={anim='staff_lightning_storm_anim', selected=fasle}
+AutoDodger2.animationMap['cast_channel_shackles_anim']={ability="shadow_shaman_shackles", castRange={400,400,400,400}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["shadow_shaman_shackles"]={anim='cast_channel_shackles_anim', selected=fasle}
+AutoDodger2.animationMap['cast_ether_shock_anim']={ability="shadow_shaman_ether_shock", castRange={600,600,600,600}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["shadow_shaman_ether_shock"]={anim='cast_ether_shock_anim', selected=fasle}
+AutoDodger2.animationMap['frost_nova_anim']={ability="lich_frost_nova", castRange={600,600,600,600}, radius={200,200,200,200}}
+AutoDodger2.animationMapReverse["lich_frost_nova"]={anim='frost_nova_anim', selected=fasle}
+AutoDodger2.animationMap['chain_frost_anim']={ability="lich_chain_frost", castRange={750,750,750,750}, radius={15,15,15,15}}
+AutoDodger2.animationMapReverse["lich_chain_frost"]={anim='chain_frost_anim', selected=fasle}
+AutoDodger2.animationMap['cast1_carrionSwarm']={ability="death_prophet_carrion_swarm", castRange={810,810,810,810}, radius={200,200,200,200}}
+AutoDodger2.animationMapReverse["death_prophet_carrion_swarm"]={anim='cast1_carrionSwarm', selected=fasle}
+AutoDodger2.animationMap['cast2_silence_anim']={ability="death_prophet_silence", castRange={900,900,900,900}, radius={425,425,425,425}}
+AutoDodger2.animationMapReverse["death_prophet_silence"]={anim='cast2_silence_anim', selected=fasle}
+AutoDodger2.animationMap['cast_ulti_anim']={ability="obsidian_destroyer_sanity_eclipse", castRange={700,700,700,700}, radius={375,475,575,575}}
+AutoDodger2.animationMapReverse["obsidian_destroyer_sanity_eclipse"]={anim='cast_ulti_anim', selected=fasle}
+AutoDodger2.animationMap['frostbite_anim']={ability="crystal_maiden_frostbite", castRange={525,525,525,525}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["crystal_maiden_frostbite"]={anim='frostbite_anim', selected=fasle}
+AutoDodger2.animationMap['nova_anim']={ability="crystal_maiden_crystal_nova", castRange={700,700,700,700}, radius={425,425,425,425}}
+AutoDodger2.animationMapReverse["crystal_maiden_crystal_nova"]={anim='nova_anim', selected=fasle}
+AutoDodger2.animationMap['cast_LW_anim']={ability="silencer_last_word", castRange={900,900,900,900}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["silencer_last_word"]={anim='cast_LW_anim', selected=fasle}
+AutoDodger2.animationMap['warlock_cast2_shadow_word_anim']={ability="warlock_shadow_word", castRange={525,600,675,750}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["warlock_shadow_word"]={anim='warlock_cast2_shadow_word_anim', selected=fasle}
+AutoDodger2.animationMap['warlock_cast4_rain_chaos_anim']={ability="warlock_rain_of_chaos", castRange={1200,1200,1200,1200}, radius={600,600,600,600}}
+AutoDodger2.animationMapReverse["warlock_rain_of_chaos"]={anim='warlock_cast4_rain_chaos_anim', selected=fasle}
+AutoDodger2.animationMap['earthshock_anim']={ability="ursa_earthshock", castRange={0,0,0,0}, radius={385,385,385,385}}
+AutoDodger2.animationMapReverse["ursa_earthshock"]={anim='earthshock_anim', selected=fasle}
+AutoDodger2.animationMap['queen_sonicwave_anim']={ability="queenofpain_sonic_wave", castRange={900,900,900,900}, radius={450,450,450,450}}
+AutoDodger2.animationMapReverse["queenofpain_sonic_wave"]={anim='queen_sonicwave_anim', selected=fasle}
+AutoDodger2.animationMap['cast3_Purifying_Flames_anim']={ability="oracle_purifying_flames", castRange={800,800,800,800}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["oracle_purifying_flames"]={anim='cast3_Purifying_Flames_anim', selected=fasle}
+AutoDodger2.animationMap['cast_ult_anim']={ability="necrolyte_reapers_scythe", castRange={600,600,600,600}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["necrolyte_reapers_scythe"]={anim='cast_ult_anim', selected=fasle}
+AutoDodger2.animationMap['fiends_grip_cast_anim']={ability="bane_fiends_grip", castRange={600,600,600,600}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["bane_fiends_grip"]={anim='fiends_grip_cast_anim', selected=fasle}
+AutoDodger2.animationMap['brain_sap_anim']={ability="bane_brain_sap", castRange={600,600,600,600}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["bane_brain_sap"]={anim='brain_sap_anim', selected=fasle}
+AutoDodger2.animationMap['nightmare_anim']={ability="bane_nightmare", castRange={500,550,600,650}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["bane_nightmare"]={anim='nightmare_anim', selected=fasle}
+AutoDodger2.animationMap['dragon_slave_anim']={ability="lina_dragon_slave", castRange={1075,1075,1075,1075}, radius={275,275,275,275}}
+AutoDodger2.animationMapReverse["lina_dragon_slave"]={anim='dragon_slave_anim', selected=fasle}
+AutoDodger2.animationMap['light_strike_array_lhand_anim']={ability="lina_light_strike_array", castRange={625,625,625,625}, radius={225,225,225,225}}
+AutoDodger2.animationMapReverse["lina_light_strike_array"]={anim='light_strike_array_lhand_anim', selected=fasle}
+AutoDodger2.animationMap['laguna_blade_anim']={ability="lina_laguna_blade", castRange={600,600,600,600}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["lina_laguna_blade"]={anim='laguna_blade_anim', selected=fasle}
+AutoDodger2.animationMap['finger_anim']={ability="lion_finger_of_death", castRange={900,900,900,900}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["lion_finger_of_death"]={anim='finger_anim', selected=fasle}
+AutoDodger2.animationMap['lasso_start_anim']={ability="batrider_flaming_lasso", castRange={100,100,100,100}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["batrider_flaming_lasso"]={anim='lasso_start_anim', selected=fasle}
+AutoDodger2.animationMap['cast1_malefice_anim']={ability="enigma_malefice", castRange={600,600,600,600}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["enigma_malefice"]={anim='cast1_malefice_anim', selected=fasle}
+AutoDodger2.animationMap['cast4_black_hole_anim']={ability="enigma_black_hole", castRange={275,275,275,275}, radius={420,420,420,420}}
+AutoDodger2.animationMapReverse["enigma_black_hole"]={anim='cast4_black_hole_anim', selected=fasle}
+AutoDodger2.animationMap['cast1_penitence_anim']={ability="chen_penitence", castRange={800,800,800,800}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["chen_penitence"]={anim='cast1_penitence_anim', selected=fasle}
+AutoDodger2.animationMap['cast2_testoffaith_anim']={ability="chen_test_of_faith", castRange={600,600,600,600}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["chen_test_of_faith"]={anim='cast2_testoffaith_anim', selected=fasle}
+AutoDodger2.animationMap['cast1_fireblast_anim']={ability="ogre_magi_fireblast", castRange={475,475,475,475}, radius={50,50,50,50}}
+AutoDodger2.animationMapReverse["ogre_magi_fireblast"]={anim='cast1_fireblast_anim', selected=fasle}
+AutoDodger2.animationMap['cast1_fireblast_withUltiSceptre_anim']={ability="ogre_magi_unrefined_fireblast", castRange={475,475,475,475}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["ogre_magi_unrefined_fireblast"]={anim='cast1_fireblast_withUltiSceptre_anim', selected=fasle}
+AutoDodger2.animationMap['enchant_anim']={ability="enchantress_enchant", castRange={700,700,700,700}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["enchantress_enchant"]={anim='enchant_anim', selected=fasle}
+AutoDodger2.animationMap['vacuum_anim']={ability="dark_seer_vacuum", castRange={500,500,500,500}, radius={250,350,450,550}}
+AutoDodger2.animationMapReverse["dark_seer_vacuum"]={anim='vacuum_anim', selected=fasle}
+AutoDodger2.animationMap['cast4_rupture_anim']={ability="bloodseeker_rupture", castRange={1000,1000,1000,1000}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["bloodseeker_rupture"]={anim='cast4_rupture_anim', selected=fasle}
+AutoDodger2.animationMap['cast_doubledgec_anim']={ability="centaur_double_edge", castRange={150,150,150,150}, radius={190,190,190,190}}
+AutoDodger2.animationMapReverse["centaur_double_edge"]={anim='cast_doubledgec_anim', selected=fasle}
+AutoDodger2.animationMap['pudge_dismember_start']={ability="pudge_dismember", castRange={160,160,160,160}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["pudge_dismember"]={anim='pudge_dismember_start', selected=fasle}
+AutoDodger2.animationMap['x_mark_anim']={ability="kunkka_x_marks_the_spot", castRange={400,600,800,1000}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["kunkka_x_marks_the_spot"]={anim='x_mark_anim', selected=fasle}
+AutoDodger2.animationMap['cast_void_nihility_anim']={ability="night_stalker_void", castRange={525,525,525,525}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["night_stalker_void"]={anim='cast_void_nihility_anim', selected=fasle}
+AutoDodger2.animationMap['cast_cripplingfear_anim']={ability="night_stalker_crippling_fear", castRange={500,500,500,500}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["night_stalker_crippling_fear"]={anim='cast_cripplingfear_anim', selected=fasle}
+AutoDodger2.animationMap['cast1_starfall']={ability="mirana_starfall", castRange={0,0,0,0}, radius={650,650,650,650}}
+AutoDodger2.animationMapReverse["mirana_starfall"]={anim='cast1_starfall', selected=fasle}
+AutoDodger2.animationMap['poof_digger_alt_anim']={ability="meepo_poof", castRange={0,0,0,0}, radius={375,375,375,375}}
+AutoDodger2.animationMapReverse["meepo_poof"]={anim='poof_digger_alt_anim', selected=fasle}
+AutoDodger2.animationMap['zeus_lightning_thundergods_wrath_arcana']={ability="zuus_thundergods_wrath", castRange={0,0,0,0}, radius={7000,7000,7000,7000}}
+AutoDodger2.animationMapReverse["zuus_thundergods_wrath"]={anim='zeus_lightning_thundergods_wrath_arcana', selected=fasle}
+AutoDodger2.animationMap['life drain_anim']={ability="pugna_life_drain", castRange={900,1050,1200,1200}, radius={50,50,50,50}}
+AutoDodger2.animationMapReverse["pugna_life_drain"]={anim='life drain_anim', selected=fasle}
 
 AutoDodger2.animationMap['axe_berserkers_call']={ability="axe_berserkers_call",castRange={0,0,0,0}, radius={300,300,300,300}, selected=false}
-AutoDodger2.otherAnimationMapHelper['npc_dota_hero_axe']={'axe_berserkers_call'}
+AutoDodger2.animationMap['axe_culling_blade']={ability="axe_culling_blade",castRange={150,150,150,150}, radius={25,25,25,25},selected=false}
+AutoDodger2.animationMap['axe_battle_hunger']={ability="axe_battle_hunger",castRange={750,750,750,750}, radius={25,25,25,25},selected=false}
+AutoDodger2.otherAnimationMapHelper['npc_dota_hero_axe']={'axe_berserkers_call','axe_battle_hunger','axe_culling_blade'}
 AutoDodger2.animationMap['undying_decay'] ={ability="undying_decay", castRange={650,650,650,650}, radius={325,325,325,325}, selected=false}
 AutoDodger2.otherAnimationMapHelper['npc_dota_hero_undying']={'undying_decay'}
 AutoDodger2.animationMap['chaos_knight_reality_rift']={ability="chaos_knight_reality_rift",castRange={550,600,650,700}, radius={0,0,0,0},selected=false}
@@ -997,4 +1103,12 @@ AutoDodger2.animationMap['nevermore_shadowraze1']={ability="nevermore_shadowraze
 AutoDodger2.animationMap['nevermore_shadowraze2']={ability="nevermore_shadowraze2",castRange={450,450,450,450}, radius={250,250,250,250},selected=false}
 AutoDodger2.animationMap['nevermore_shadowraze3']={ability="nevermore_shadowraze3",castRange={700,700,700,700}, radius={250,250,250,250},selected=false}
 AutoDodger2.otherAnimationMapHelper["npc_dota_hero_nevermore"]={'nevermore_shadowraze1','nevermore_shadowraze2','nevermore_shadowraze3'}
+AutoDodger2.animationMap['bane_enfeeble']={ability="bane_enfeeble",castRange={1000,1000,1000,1000}, radius={25,25,25,25},selected=false}
+AutoDodger2.otherAnimationMapHelper['npc_dota_hero_bane']={'bane_enfeeble'}
+AutoDodger2.animationMap['huskar_life_break']={ability="huskar_life_break",castRange={550,550,550,550}, radius={25,25,25,25},selected=false}
+AutoDodger2.otherAnimationMapHelper['npc_dota_hero_huskar']={'huskar_life_break'}
+AutoDodger2.animationMap['tusk_walrus_punch']={ability="tusk_walrus_punch",castRange={150,150,150,150}, radius={25,25,25,25},selected=false}
+AutoDodger2.otherAnimationMapHelper['npc_dota_hero_tusk']={'tusk_walrus_punch'}
+AutoDodger2.animationMap['razor_static_link']={ability="razor_static_link",castRange={600,600,600,600}, radius={25,25,25,25},selected=false}
+AutoDodger2.otherAnimationMapHelper['npc_dota_hero_razor']={'razor_static_link'}
 return AutoDodger2

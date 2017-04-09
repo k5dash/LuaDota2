@@ -1,12 +1,27 @@
 local AutoDodger2 = {}
 
-AutoDodger2.option = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Auto Dodger", "Automatically dodges projectiles.")
+AutoDodger2.option = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Enable", "Automatically dodges projectiles.")
 AutoDodger2.linearOption = Menu.AddOption({"Utility", "Super Auto Dodger", "Dodge Linear Projectiles"}, "Enable", "")
 AutoDodger2.impactRadiusOption = Menu.AddOption({"Utility", "Super Auto Dodger", "Dodge Linear Projectiles"}, "Impact Radius", "",100,1000,100)
 AutoDodger2.disjointOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Disjoint"}, "Enable", "")
 AutoDodger2.impactDistanceOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Disjoint"}, "Safe Distance offset", "",100,2000,100)
 AutoDodger2.animationOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Animation"}, "Enable", "")
 AutoDodger2.castPointOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Animation"}, "CastPoint Offset", "", 1,10,1 )
+
+AutoDodger2.skillItemOption = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Use Item First", "Use item first to dodge skills")
+AutoDodger2.skillOption = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Use Skill", "Use skill to dodge skills")
+AutoDodger2.itemOption = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Use Item", "Use item to dodge skills")
+AutoDodger2.daggerOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use Dagger", "Use Dagger to dodge skills", -1, 10, 1)
+AutoDodger2.blademailOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use BladeMail", "Use BladeMail to defend",-1, 10, 1)
+AutoDodger2.ghostOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use Ghost Scepter", "Use Ghost Scepter to defend",-1, 10, 1)
+AutoDodger2.mantaOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use Manta", "Use Manta to dodge skills",-1, 10, 1)
+AutoDodger2.eulOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use Eul", "Use Eul to dodge skills",-1, 10, 1)
+AutoDodger2.lotusOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use Lotus", "Use Lotus to dodge skills",-1, 10, 1)
+AutoDodger2.sbOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use Shadow Blade", "Use Shadow Blade to dodge skills",-1, 10, 1)
+AutoDodger2.bkbOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use BKB", "Use BKB to dodge skills",-1, 10, 1)
+AutoDodger2.capeOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use Glimmer Cape", "Use GlimmerCape to dodge skills",-1, 10, 1)
+
+
 -- logic for specific particle effects will go here.
 AutoDodger2.particleLogic = 
 {
@@ -36,8 +51,7 @@ AutoDodger2.drawPos = nil
 
 AutoDodger2.mapFont = Renderer.LoadFont("Tahoma", 50, Enum.FontWeight.NORMAL)
 
-AutoDodger2.skillOptionAnimation = Menu.AddOption({ "Utility", "Super Auto Dodger", "Dodge Animation"}, "Skill Picker", "Displays enemy hero cooldowns in an easy and intuitive way.")
-AutoDodger2.skillOptionDisjoint = Menu.AddOption({ "Utility", "Super Auto Dodger", "Dodge Disjoint",}, "Skill Picker", "Displays enemy hero cooldowns in an easy and intuitive way.")
+AutoDodger2.skillPickerOption = Menu.AddOption({ "Utility", "Super Auto Dodger"}, "Skill Picker", "Displays enemy hero cooldowns in an easy and intuitive way.")
 AutoDodger2.boxSizeOption = Menu.AddOption({ "Utility", "Super Auto Dodger","Skill Picker Setting" }, "Display Size", "", 21, 64, 1)
 AutoDodger2.needsInit = true
 AutoDodger2.spellIconPath = "resource/flash3/images/spellicons/"
@@ -46,10 +60,41 @@ AutoDodger2.w = 1920
 AutoDodger2.h = 1080
 AutoDodger2.colors = {}
 AutoDodger2.skillSelected = {}
+AutoDodger2.itemOrder = {}
 
 function AutoDodger2.InsertColor(alias, r_, g_, b_)
     table.insert(AutoDodger2.colors, { name = alias, r = r_, g = g_, b = b_})
 end
+Menu.SetValueName(AutoDodger2.daggerOption, -1, 'OFF')
+Menu.SetValueName(AutoDodger2.blademailOption, -1, 'OFF')
+Menu.SetValueName(AutoDodger2.ghostOption, -1, 'OFF')
+Menu.SetValueName(AutoDodger2.mantaOption, -1, 'OFF')
+Menu.SetValueName(AutoDodger2.eulOption, -1, 'OFF')
+Menu.SetValueName(AutoDodger2.lotusOption, -1, 'OFF')
+Menu.SetValueName(AutoDodger2.sbOption, -1, 'OFF')
+Menu.SetValueName(AutoDodger2.bkbOption, -1, 'OFF')
+Menu.SetValueName(AutoDodger2.capeOption, -1, 'OFF')
+
+function AutoDodger2.setItemOrder()
+    AutoDodger2.itemOrder = {
+        {Menu.GetValue(AutoDodger2.daggerOption), "item_blink"},
+        {Menu.GetValue(AutoDodger2.blademailOption), "item_blade_mail"},
+        {Menu.GetValue(AutoDodger2.ghostOption), "item_ghost"},
+        {Menu.GetValue(AutoDodger2.mantaOption), "item_manta"},
+        {Menu.GetValue(AutoDodger2.eulOption),"item_cyclone"},
+        {Menu.GetValue(AutoDodger2.lotusOption),"item_lotus_orb"},
+        {Menu.GetValue(AutoDodger2.sbOption),"item_invis_sword"},
+        {Menu.GetValue(AutoDodger2.bkbOption),"item_black_king_bar"},
+        {Menu.GetValue(AutoDodger2.capeOption),"item_glimmer_cape"}
+    }
+    table.sort(AutoDodger2.itemOrder, function(a, b)
+        return a[1] > b[1]
+    end)
+    Log.Write('...........')
+    for k,v in pairs(AutoDodger2.itemOrder) do
+        Log.Write(v[1]..':'..v[2])
+    end 
+end 
 
 AutoDodger2.InsertColor("Green", 0, 255, 0)
 AutoDodger2.InsertColor("Yellow", 234, 255, 0)
@@ -87,19 +132,98 @@ function AutoDodger2.OnUpdate()
 end
 
 --------------------------------------------------------------------------------------------------------
-function AutoDodger2.DodgeLogicProjectile()
+function AutoDodger2.DodgeLogicProjectile(key, mode)
+    if Menu.GetValue(AutoDodger2.skillItemOption) then
+        local dodged = AutoDodger2.DodgeLogicItem(key, mode, false) 
+        AutoDodger2.DodgeLogicSkill(key, mode, dodged)
+    else
+        local dodged = AutoDodger2.DodgeLogicSkill(key, mode,false)
+        AutoDodger2.DodgeLogicItem(key, mode, dodged) 
+    end 
+end 
+function AutoDodger2.DodgeLogicItem(key, mode, dodged)
+    if not Menu.IsEnabled(AutoDodger2.itemOption) then return false end 
     local myHero = Heroes.GetLocal()
-    local dodged = false
     local eul = NPC.GetItem(myHero, "item_cyclone")
     local lotus = NPC.GetItem(myHero, "item_lotus_orb")
     local bladeMail = NPC.GetItem(myHero, "item_blade_mail")
     local manta = NPC.GetItem(myHero, "item_manta") 
+    local ghost = NPC.GetItem(myHero, "item_ghost") 
+    local eblade = NPC.GetItem(myHero, "item_ethereal_blade")
+    local blink = NPC.GetItem(myHero, "item_blink")
+    local shadowblade = NPC.GetItem(myHero, "item_invis_sword")
+    local glimmerCape = NPC.GetItem(myHero, "item_glimmer_cape")
 
     local myTeam = Entity.GetTeamNum(myHero)
     local myMana = NPC.GetMana(myHero)
     local myPos = Entity.GetAbsOrigin(myHero)
     local myName = NPC.GetUnitName(myHero)
+    AutoDodger2.setItemOrder()
 
+    for k,v in ipairs(AutoDodger2.itemOrder) do
+        local order = v[1]
+        local item = v[2]
+        if order ~= -1 then 
+            if not dodged and eul and Ability.IsCastable(eul,myMana) and item == "item_cyclone" then
+                    Ability.CastTarget(eul,myHero)
+                    dodged = true
+                    break
+            end 
+            if not dodged and lotus and Ability.IsCastable(lotus,myMana) and item == "item_lotus_orb" then
+                    Ability.CastTarget(lotus,myHero)
+                    dodged = true
+                    break
+            end 
+            if not dodged and bladeMail and Ability.IsCastable(bladeMail,myMana) and item == "item_blade_mail" then
+                    Ability.CastNoTarget(bladeMail)
+                    dodged = true
+                    break
+            end
+            if not dodged and manta and Ability.IsCastable(manta,myMana) and item == "item_manta" then
+                    Ability.CastNoTarget(manta)
+                    dodged = true
+                    break
+            end
+            if not dodged and ghost and Ability.IsCastable(ghost,myMana) and item == "item_ghost" then
+                    Ability.CastNoTarget(ghost)
+                    dodged = true
+                    break
+            end 
+            if not dodged and eblade and Ability.IsCastable(eblade,myMana) and item == "item_ethereal_blade" then
+                    Ability.CastTarget(eblade,myHero)
+                    dodged = true
+                    break
+            end
+            if not dodged and blink and Ability.IsCastable(blink,myMana) and item == "item_blink" then
+                    AutoDodger2.DodgeByMoveForward(myHero, 1199, blink)
+                    dodged = true
+                    break
+            end
+            if not dodged and shadowblade and Ability.IsCastable(shadowblade,myMana) and item == "item_invis_sword" then
+                    Ability.CastNoTarget(shadowblade)
+                    dodged = true
+                    break
+            end
+            if not dodged and glimmerCape and Ability.IsCastable(glimmerCape,myMana) and item == "item_glimmer_cape" then
+                    Ability.CastTarget(glimmerCape,myHero)
+                    dodged = true
+                    break
+            end
+        end 
+    end
+
+  
+    return dodged
+end 
+
+function AutoDodger2.DodgeLogicSkill(key, mode, dodged)
+    if not Menu.IsEnabled(AutoDodger2.skillOption) then return false end
+    local myHero = Heroes.GetLocal()
+    local myTeam = Entity.GetTeamNum(myHero)
+    local myMana = NPC.GetMana(myHero)
+    local myPos = Entity.GetAbsOrigin(myHero)
+    local myName = NPC.GetUnitName(myHero)
+    if dodged then return end 
     if myName == "npc_dota_hero_puck" then 
         local skill = NPC.GetAbility(myHero, "puck_phase_shift")
         if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
@@ -321,26 +445,8 @@ function AutoDodger2.DodgeLogicProjectile()
             end 
         end 
     end
-
-    if not dodged and eul and Ability.IsCastable(eul,myMana)  then
-            Ability.CastTarget(eul,myHero)
-            dodged = true
-    end 
-    if not dodged and lotus and Ability.IsCastable(lotus,myMana)  then
-            Ability.CastTarget(lotus,myHero)
-            dodged = true
-    end 
-    if not dodged and manta and Ability.IsCastable(manta,myMana)  then
-            Ability.CastNoTarget(manta)
-            dodged = true
-    end 
-    if not dodged and bladeMail and Ability.IsCastable(bladeMail,myMana)  then
-            Ability.CastNoTarget(bladeMail)
-            dodged = true
-    end
-
+    return dodged
 end 
-
 function AutoDodger2.DodgeByAttackNearUnits(myHero, radius, skill)
     local units = NPC.GetUnitsInRadius(myHero, radius, Enum.TeamType.TEAM_ENEMY)
     local dodged = false
@@ -400,6 +506,7 @@ function AutoDodger2.Reset()
     AutoDodger2.projectileQueueLength = 0
     AutoDodger2.AnimationQueueLength = 0
     AutoDodger2.projectileQueue={}
+    AutoDodger2.setItemOrder()
 end
 
 function AutoDodger2.GetFountainPosition(teamNum)
@@ -445,19 +552,21 @@ function AutoDodger2.OnProjectile(projectile)
     
     local delay = (distanceLenth/projectile.moveSpeed) 
     delay = math.max(delay, 0.001)
-
+    Log.Write(projectile.name)
+    if AutoDodger2.projectileMap[projectile.name] and AutoDodger2.projectileMapRev[AutoDodger2.projectileMap[projectile.name].ability].selected or not AutoDodger2.projectileMap[projectile.name] then 
     -- table.insert(AutoDodger2.projectileQueue, {GameRules.GetGameTime()+delay,projectile.name})
-    AutoDodger2.projectileQueue[projectile.particleSystemHandle] = { 
-        source = projectile.source,
-        target = projectile.target,
-        origin = Entity.GetAbsOrigin(projectile.source),
-        moveSpeed = projectile.moveSpeed,
-        index = projectile.particleSystemHandle,
-        time = GameRules.GetGameTime(),
-        dodgeTime = delay + GameRules.GetGameTime(),
-        name = projectile.name,
-    }
-    AutoDodger2.projectileQueueLength = AutoDodger2.projectileQueueLength + 1
+        AutoDodger2.projectileQueue[projectile.particleSystemHandle] = { 
+            source = projectile.source,
+            target = projectile.target,
+            origin = Entity.GetAbsOrigin(projectile.source),
+            moveSpeed = projectile.moveSpeed,
+            index = projectile.particleSystemHandle,
+            time = GameRules.GetGameTime(),
+            dodgeTime = delay + GameRules.GetGameTime(),
+            name = projectile.name,
+        }
+        AutoDodger2.projectileQueueLength = AutoDodger2.projectileQueueLength + 1
+    end 
 end
 
 function AutoDodger2.OnLinearProjectileCreate(projectile)
@@ -598,10 +707,10 @@ function AutoDodger2.ProcessProjectile()
     if not Entity.IsAlive(myHero) then return end
 
     if candidateKey then 
+        AutoDodger2.DodgeLogicProjectile(candidateKey, "projectile")
         AutoDodger2.projectileQueue[candidateKey] = nil
         AutoDodger2.projectileQueueLength = AutoDodger2.projectileQueueLength - 1
     end 
-    AutoDodger2.DodgeLogicProjectile()
     AutoDodger2.nextDodgeTimeProjectile = min
 end
 
@@ -633,10 +742,15 @@ function AutoDodger2.ProcessLinearProjectile()
         local endPos = v.origin + projectileDir:Scaled(AutoDodger2.GetRange(v.index))
 
         -- do not dodge if ahead of the impact point, and do not dodge if ahead of the max range of the projectile.
-        if (impactPos - curPos):Dot(projectileDir) > 0 and (endPos - impactPos):Dot(projectileDir) > 0 and NPC.IsPositionInRange(myHero, impactPos, AutoDodger2.impactRadius) then 
-            local impactDir = (myPos - impactPos):Normalized()
-
-            table.insert(movePositions, impactPos + impactDir:Scaled(AutoDodger2.impactRadius + NPC.GetHullRadius(myHero) + 10))
+        if (impactPos - curPos):Dot(projectileDir) > 0 and (endPos - impactPos):Dot(projectileDir) > 0  then 
+            if NPC.IsPositionInRange(myHero, curPos, AutoDodger2.impactRadius) then
+                AutoDodger2.DodgeLogicProjectile(k,'linear')
+                return
+            end 
+            if NPC.IsPositionInRange(myHero, impactPos, AutoDodger2.impactRadius) then
+                local impactDir = (myPos - impactPos):Normalized() 
+                table.insert(movePositions, impactPos + impactDir:Scaled(AutoDodger2.impactRadius + NPC.GetHullRadius(myHero) + 10))
+            end 
         end
     end
 
@@ -701,7 +815,7 @@ function AutoDodger2.ProcessAnimation()
 
     
     if candidateKey and AutoDodger2.isTargetMe(myHero, AutoDodger2.AnimationQueue[candidateKey].enemy, AutoDodger2.AnimationQueue[candidateKey].sequenceName ) then
-        AutoDodger2.DodgeLogicProjectile() 
+        AutoDodger2.DodgeLogicProjectile(candidateKey,"animation") 
         AutoDodger2.AnimationQueue[candidateKey] = nil
         AutoDodger2.AnimationQueueLength = AutoDodger2.AnimationQueueLength - 1
     end 
@@ -723,7 +837,7 @@ function AutoDodger2.OnOtherAnimationCreation()
                         local skillName =  AutoDodger2.otherAnimationMapHelper[enemyName][j]
                         local skill = NPC.GetAbility(hero, skillName)
                         if Ability.IsInAbilityPhase(skill) and not AutoDodger2.AnimationQueue[skillName] and AutoDodger2.animationMap[skillName] and AutoDodger2.animationMap[skillName].selected then 
-                            Log.Write(skillName)
+                            --Log.Write(skillName)
                             AutoDodger2.AnimationQueue[skillName] ={
                                 time = GameRules.GetGameTime()+Ability.GetCastPoint(skill),
                                 sequenceName = skillName,
@@ -793,7 +907,7 @@ function AutoDodger2.OnDraw()
         return
     end
     local myHero = Heroes.GetLocal()
-    if not Menu.IsEnabled(AutoDodger2.skillOptionAnimation) then return end
+    if not Menu.IsEnabled(AutoDodger2.skillPickerOption) then return end
 
     local myHero = Heroes.GetLocal()
 
@@ -819,12 +933,11 @@ end
 function AutoDodger2.OnMenuOptionChange(option, old, new)
     if option == AutoDodger2.boxSizeOption then
         AutoDodger2.InitDisplay()
-    end
-    if option ==AutoDodger2.skillOptionAnimation and new == 1 then
-        AutoDodger2.DodgeMode = 'animation'
-    end 
-    if option ==AutoDodger2.skillOptionDisjoint and new == 1 then
-        AutoDodger2.DodgeMode = 'disjoint'
+    elseif option == AutoDodger2.daggerOption or option == AutoDodger2.blademailOption or
+           option == AutoDodger2.ghostOption or option == AutoDodger2.mantaOption or option == AutoDodger2.eulOption or 
+           option == AutoDodger2.lotusOption or option == AutoDodger2.sbOption or
+           option == AutoDodger2.bkbOption or option == AutoDodger2.capeOption then 
+        AutoDodger2.setItemOrder()
     end 
 end
 
@@ -834,9 +947,10 @@ function AutoDodger2.DrawDisplay(hero, x,y)
 
     for i = 0, 24 do
         local ability = NPC.GetAbilityByIndex(hero, i)
-
-        if ability ~= nil and Entity.IsAbility(ability) and not Ability.IsHidden(ability) and not Ability.IsAttributes(ability) and (AutoDodger2.animationMapReverse[Ability.GetName(ability)] or AutoDodger2.animationMap[Ability.GetName(ability)])then
-            table.insert(abilities, ability)
+        if ability ~= nil and Entity.IsAbility(ability) and not Ability.IsHidden(ability) and not Ability.IsAttributes(ability) then
+            if AutoDodger2.animationMapReverse[Ability.GetName(ability)] or AutoDodger2.animationMap[Ability.GetName(ability)] or AutoDodger2.projectileMapRev[Ability.GetName(ability)]  then 
+                table.insert(abilities, ability)
+            end 
         end
     end
 
@@ -883,18 +997,20 @@ function AutoDodger2.DrawAbilitySquare(hero, ability, x, y, index)
     end
 
     if hoveringOver and Input.IsKeyDownOnce(Enum.ButtonCode.MOUSE_LEFT) then
-        if AutoDodger2.DodgeMode =='animation' then 
+        if Menu.IsEnabled(AutoDodger2.skillPickerOption) then 
             if AutoDodger2.animationMapReverse[abilityName] then
                 AutoDodger2.animationMapReverse[abilityName].selected = not AutoDodger2.animationMapReverse[abilityName].selected
             end 
             if AutoDodger2.animationMap[abilityName] then
                 AutoDodger2.animationMap[abilityName].selected = not AutoDodger2.animationMap[abilityName].selected
             end 
-        elseif AutoDodger2.DodgeMode =='disjoint' then 
+            if AutoDodger2.projectileMapRev[abilityName] then 
+                AutoDodger2.projectileMapRev[abilityName].selected = not AutoDodger2.projectileMapRev[abilityName].selected
+            end 
         end 
     end
 
-    if AutoDodger2.animationMapReverse[abilityName] and AutoDodger2.animationMapReverse[abilityName].selected or AutoDodger2.animationMap[abilityName] and AutoDodger2.animationMap[abilityName].selected then 
+    if AutoDodger2.animationMapReverse[abilityName] and AutoDodger2.animationMapReverse[abilityName].selected or AutoDodger2.animationMap[abilityName] and AutoDodger2.animationMap[abilityName].selected or AutoDodger2.projectileMapRev[abilityName] and AutoDodger2.projectileMapRev[abilityName].selected then 
         imageColor = { 255, 255, 255 }
         outlineColor = { 0, 255 , 0 }
     end 
@@ -943,22 +1059,22 @@ AutoDodger2.animationMap ={}
 AutoDodger2.animationMapReverse={}
 AutoDodger2.otherAnimationMapHelper={}
 
-AutoDodger2.animationMap['chronosphere_anim']={ability="faceless_void_chronosphere", castRange={600,600,600,600}, radius={425,425,425,425}}
+AutoDodger2.animationMap['chronosphere_anim']={ability="faceless_void_chronosphere", castRange={600,600,600,600}, radius={425,425,425,425}, item={'item_blink','item_ghost','item_blade_mail','item_manta','item_cyclone'}}
 AutoDodger2.animationMapReverse["faceless_void_chronosphere"]={anim='chronosphere_anim', selected=false}
 AutoDodger2.animationMap['cast_time_dilation']={ability="faceless_void_time_dilation", castRange={0,0,0,0}, radius={725,725,725,725}}
 AutoDodger2.animationMapReverse["faceless_void_time_dilation"]={anim='cast_time_dilation', selected=false}
 AutoDodger2.animationMap['impale_anim']={ability="lion_impale", castRange={500,500,500,500}, radius={125,125,125,125}, speed=1600}
 AutoDodger2.animationMapReverse["lion_impale"]={anim='impale_anim', selected=fasle}
-AutoDodger2.animationMap['shield_storm_bolt']={ability="sven_storm_bolt", castRange={600,600,600,600}, radius={125,125,125,125}}
-AutoDodger2.animationMapReverse["sven_storm_bolt"]={anim='shield_storm_bolt', selected=fasle}
+-- AutoDodger2.animationMap['shield_storm_bolt']={ability="sven_storm_bolt", castRange={600,600,600,600}, radius={125,125,125,125}}
+-- AutoDodger2.animationMapReverse["sven_storm_bolt"]={anim='shield_storm_bolt', selected=fasle}
 AutoDodger2.animationMap['cast_purification_anim']={ability="omniknight_purification", castRange={600,600,600,600}, radius={125,125,125,125}}
 AutoDodger2.animationMapReverse["omniknight_purification"]={anim='cast_purification_anim', selected=fasle}
 AutoDodger2.animationMap['cast4_primal_roar_anim']={ability="beastmaster_primal_roar", castRange={600,600,600,600}, radius={0,0,0,0}}
 AutoDodger2.animationMapReverse["beastmaster_primal_roar"]={anim='cast4_primal_roar_anim', selected=fasle}
 AutoDodger2.animationMap['legion_commander_duel_anim']={ability="legion_commander_duel", castRange={150,150,150,150}, radius={0,0,0,0}}
 AutoDodger2.animationMapReverse["legion_commander_duel"]={anim='legion_commander_duel_anim', selected=fasle}
-AutoDodger2.animationMap['cast1_hellfire_blast']={ability="skeleton_king_hellfire_blast", castRange={525,525,525,525}, radius={0,0,0,0}}
-AutoDodger2.animationMapReverse["skeleton_king_hellfire_blast"]={anim='cast1_hellfire_blast', selected=fasle}
+-- AutoDodger2.animationMap['cast1_hellfire_blast']={ability="skeleton_king_hellfire_blast", castRange={525,525,525,525}, radius={0,0,0,0}}
+-- AutoDodger2.animationMapReverse["skeleton_king_hellfire_blast"]={anim='cast1_hellfire_blast', selected=fasle}
 AutoDodger2.animationMap['cast_hoofstomp_anim']={ability="centaur_hoof_stomp", castRange={0,0,0,0}, radius={315,315,315,315}}
 AutoDodger2.animationMapReverse["centaur_hoof_stomp"]={anim='cast_hoofstomp_anim', selected=fasle}
 AutoDodger2.animationMap['fissure_anim']={ability="earthshaker_fissure", castRange={1350,1350,1350,1350}, radius={225,225,225,225}}
@@ -969,8 +1085,8 @@ AutoDodger2.animationMap['amp_anim']={ability="slardar_amplify_damage", castRang
 AutoDodger2.animationMapReverse["slardar_amplify_damage"]={anim='amp_anim', selected=fasle}
 AutoDodger2.animationMap['cast_doom_anim']={ability="doom_bringer_doom", castRange={550,550,550,550}, radius={0,0,0,0}}
 AutoDodger2.animationMapReverse["doom_bringer_doom"]={anim='cast_doom_anim', selected=fasle}
-AutoDodger2.animationMap['chaosbolt_anim']={ability="chaos_knight_chaos_bolt", castRange={500,500,500,500}, radius={0,0,0,0}}
-AutoDodger2.animationMapReverse["chaos_knight_chaos_bolt"]={anim='chaosbolt_anim', selected=fasle}
+-- AutoDodger2.animationMap['chaosbolt_anim']={ability="chaos_knight_chaos_bolt", castRange={500,500,500,500}, radius={0,0,0,0}}
+-- AutoDodger2.animationMapReverse["chaos_knight_chaos_bolt"]={anim='chaosbolt_anim', selected=fasle}
 AutoDodger2.animationMap['ultimate_anim']={ability="spirit_breaker_nether_strike", castRange={700,700,700,700}, radius={0,0,0,0}}
 AutoDodger2.animationMapReverse["spirit_breaker_nether_strike"]={anim='ultimate_anim', selected=fasle}
 AutoDodger2.animationMap['Thunderclap_anim']={ability="brewmaster_thunder_clap", castRange={0,0,0,0}, radius={400,400,400,400}}
@@ -1090,6 +1206,12 @@ AutoDodger2.animationMap['zeus_lightning_thundergods_wrath_arcana']={ability="zu
 AutoDodger2.animationMapReverse["zuus_thundergods_wrath"]={anim='zeus_lightning_thundergods_wrath_arcana', selected=fasle}
 AutoDodger2.animationMap['life drain_anim']={ability="pugna_life_drain", castRange={900,1050,1200,1200}, radius={50,50,50,50}}
 AutoDodger2.animationMapReverse["pugna_life_drain"]={anim='life drain_anim', selected=fasle}
+AutoDodger2.animationMap['bonkers_paralyzing_cask_anim']={ability="witch_doctor_paralyzing_cask", castRange={700,700,700,700}, radius={25,25,25,25}}
+AutoDodger2.animationMapReverse["witch_doctor_paralyzing_cask"]={anim='life bonkers_paralyzing_cask_anim', selected=fasle}
+AutoDodger2.animationMap['cast5_coil_anim']={ability="puck_dream_coil", castRange={750,750,750,750}, radius={375,375,375,375}}
+AutoDodger2.animationMapReverse["puck_dream_coil"]={anim='cast5_coil_anim', selected=fasle}
+AutoDodger2.animationMap['mana_burn_anim']={ability="nyx_assassin_mana_burn", castRange={750,750,750,750}, radius={375,375,375,375}}
+AutoDodger2.animationMapReverse["nyx_assassin_mana_burn"]={anim='mana_burn_anim', selected=fasle}
 
 AutoDodger2.animationMap['axe_berserkers_call']={ability="axe_berserkers_call",castRange={0,0,0,0}, radius={300,300,300,300}, selected=false}
 AutoDodger2.animationMap['axe_culling_blade']={ability="axe_culling_blade",castRange={150,150,150,150}, radius={25,25,25,25},selected=false}
@@ -1107,8 +1229,73 @@ AutoDodger2.animationMap['bane_enfeeble']={ability="bane_enfeeble",castRange={10
 AutoDodger2.otherAnimationMapHelper['npc_dota_hero_bane']={'bane_enfeeble'}
 AutoDodger2.animationMap['huskar_life_break']={ability="huskar_life_break",castRange={550,550,550,550}, radius={25,25,25,25},selected=false}
 AutoDodger2.otherAnimationMapHelper['npc_dota_hero_huskar']={'huskar_life_break'}
-AutoDodger2.animationMap['tusk_walrus_punch']={ability="tusk_walrus_punch",castRange={150,150,150,150}, radius={25,25,25,25},selected=false}
-AutoDodger2.otherAnimationMapHelper['npc_dota_hero_tusk']={'tusk_walrus_punch'}
+-- AutoDodger2.animationMap['tusk_walrus_punch']={ability="tusk_walrus_punch",castRange={150,150,150,150}, radius={25,25,25,25},selected=false}
+-- AutoDodger2.otherAnimationMapHelper['npc_dota_hero_tusk']={'tusk_walrus_punch'}
 AutoDodger2.animationMap['razor_static_link']={ability="razor_static_link",castRange={600,600,600,600}, radius={25,25,25,25},selected=false}
 AutoDodger2.otherAnimationMapHelper['npc_dota_hero_razor']={'razor_static_link'}
+AutoDodger2.animationMap['drow_ranger_wave_of_silence']={ability="drow_ranger_wave_of_silence",castRange={900,900,900,900}, radius={250,250,250,250},selected=false}
+AutoDodger2.otherAnimationMapHelper['npc_dota_hero_drow_ranger']={'drow_ranger_wave_of_silence'}
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+AutoDodger2.projectileMap = {}
+AutoDodger2.projectileMapRev = {}
+
+AutoDodger2.projectileMap['abaddon_death_coil'] = {ability='abaddon_death_coil'}  
+AutoDodger2.projectileMapRev['abaddon_death_coil'] = {selected=true}
+AutoDodger2.projectileMap['skeletonking_hellfireblast'] = {ability='skeleton_king_hellfire_blast'}  
+AutoDodger2.projectileMapRev['skeleton_king_hellfire_blast'] = {selected=true}
+AutoDodger2.projectileMap['UNKNKOWN_PARTICLE'] = {ability='tusk_snowball'}  
+AutoDodger2.projectileMapRev['tusk_snowball'] = {selected=true}
+AutoDodger2.projectileMap['sven_spell_storm_bolt'] = {ability='sven_storm_bolt'}  
+AutoDodger2.projectileMapRev['sven_storm_bolt'] = {selected=true}
+AutoDodger2.projectileMap['chaos_knight_chaos_bolt'] = {ability='chaos_knight_chaos_bolt'}  
+AutoDodger2.projectileMapRev['chaos_knight_chaos_bolt'] = {selected=true}
+AutoDodger2.projectileMap['tidehunter_gush'] = {ability='tidehunter_gush'}  
+AutoDodger2.projectileMapRev['tidehunter_gush'] = {selected=true}
+AutoDodger2.projectileMap['alchemist_unstable_concoction_projectile'] = {ability='alchemist_unstable_concoction'}  
+AutoDodger2.projectileMapRev['alchemist_unstable_concoction'] = {selected=true}
+AutoDodger2.projectileMap['brewmaster_drunken_haze'] = {ability='brewmaster_drunken_haze'}  
+AutoDodger2.projectileMapRev['brewmaster_drunken_haze'] = {selected=true}
+AutoDodger2.projectileMap['bristleback_viscous_nasal_goo'] = {ability='bristleback_viscous_nasal_goo'} 
+AutoDodger2.projectileMapRev['bristleback_viscous_nasal_goo'] = {selected=true}
+AutoDodger2.projectileMap['vengeful_magic_missle'] = {ability='vengefulspirit_magic_missile'} 
+AutoDodger2.projectileMapRev['vengefulspirit_magic_missile'] = {selected=true}
+AutoDodger2.projectileMap['siren_net_projectile'] = {ability='naga_siren_ensnare'} 
+AutoDodger2.projectileMapRev['naga_siren_ensnare'] = {selected=true}
+AutoDodger2.projectileMap['phantom_assassin_stifling_dagger'] = {ability='phantom_assassin_stifling_dagger'} 
+AutoDodger2.projectileMapRev['phantom_assassin_stifling_dagger'] = {selected=true}
+AutoDodger2.projectileMap['phantomlancer_spiritlance_projectile'] = {ability='phantom_lancer_spirit_lance'} 
+AutoDodger2.projectileMapRev['phantom_lancer_spirit_lance'] = {selected=true}
+AutoDodger2.projectileMap['spectre_spectral_dagger_tracking'] = {ability='spectre_spectral_dagger'} 
+AutoDodger2.projectileMapRev['spectre_spectral_dagger'] = {selected=true}
+AutoDodger2.projectileMap['sniper_assassinate'] = {ability='sniper_assassinate'} 
+AutoDodger2.projectileMapRev['sniper_assassinate'] = {selected=true}
+AutoDodger2.projectileMap['medusa_mystic_snake_projectile_initial'] = {ability='medusa_mystic_snake'} 
+AutoDodger2.projectileMapRev['medusa_mystic_snake'] = {selected=true}
+AutoDodger2.projectileMap['broodmother_web_cast'] = {ability='broodmother_spawn_spiderlings'} 
+AutoDodger2.projectileMapRev['broodmother_spawn_spiderlings'] = {selected=true}
+AutoDodger2.projectileMap['bounty_hunter_suriken_toss'] = {ability='bounty_hunter_shuriken_toss'} 
+AutoDodger2.projectileMapRev['bounty_hunter_shuriken_toss'] = {selected=true}
+AutoDodger2.projectileMap['tinker_missile'] = {ability='tinker_heat_seeking_missile'} 
+AutoDodger2.projectileMapRev['tinker_heat_seeking_missile'] = {selected=true}
+AutoDodger2.projectileMap['skywrath_mage_arcane_bolt'] = {ability='skywrath_mage_arcane_bolt'} 
+AutoDodger2.projectileMapRev['skywrath_mage_arcane_bolt'] = {selected=true}
+AutoDodger2.projectileMap['skywrath_mage_concussive_shot'] = {ability='skywrath_mage_concussive_shot'} 
+AutoDodger2.projectileMapRev['skywrath_mage_concussive_shot'] = {selected=true}
+AutoDodger2.projectileMap['dazzle_poison_touch'] = {ability='dazzle_poison_touch'} 
+AutoDodger2.projectileMapRev['dazzle_poison_touch'] = {selected=true}
+AutoDodger2.projectileMap['queen_scream_of_pain'] = {ability='queenofpain_scream_of_pain'} 
+AutoDodger2.projectileMapRev['queenofpain_scream_of_pain'] = {selected=true}
+AutoDodger2.projectileMap['queen_shadow_strike'] = {ability='queenofpain_shadow_strike'} 
+AutoDodger2.projectileMapRev['queenofpain_shadow_strike'] = {selected=true}
+AutoDodger2.projectileMap['necrolyte_pulse_enemy'] = {ability='necrolyte_death_pulse'} 
+AutoDodger2.projectileMapRev['necrolyte_death_pulse'] = {selected=true}
+AutoDodger2.projectileMap['oracle_fortune_prj'] = {ability='oracle_fortunes_end'} 
+AutoDodger2.projectileMapRev['oracle_fortunes_end'] = {selected=true}
+AutoDodger2.projectileMap['visage_soul_assumption_bolt'] = {ability='visage_soul_assumption'} 
+AutoDodger2.projectileMapRev['visage_soul_assumption'] = {selected=true}
+AutoDodger2.projectileMap['windrunner_shackleshot'] = {ability='windrunner_shackleshot'} 
+AutoDodger2.projectileMapRev['windrunner_shackleshot'] = {selected=true}
+AutoDodger2.projectileMap['orge_magi_ignite'] = {ability='ogre_magi_ignite'} 
+AutoDodger2.projectileMapRev['ogre_magi_ignite'] = {selected=true}
 return AutoDodger2

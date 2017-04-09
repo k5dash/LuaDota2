@@ -2,7 +2,8 @@ local AutoDodger2 = {}
 
 AutoDodger2.option = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Enable", "Automatically dodges projectiles.")
 AutoDodger2.linearOption = Menu.AddOption({"Utility", "Super Auto Dodger", "Dodge Linear Projectiles"}, "Enable", "")
-AutoDodger2.impactRadiusOption = Menu.AddOption({"Utility", "Super Auto Dodger", "Dodge Linear Projectiles"}, "Impact Radius", "",100,1000,100)
+AutoDodger2.impactRadiusOption = Menu.AddOption({"Utility", "Super Auto Dodger", "Dodge Linear Projectiles"}, "Move Impact Radius", "",100,1000,100)
+AutoDodger2.impactRadiusDodgeOption = Menu.AddOption({"Utility", "Super Auto Dodger", "Dodge Linear Projectiles"}, "Dodge Impact Radius", "",100,1000,100)
 AutoDodger2.disjointOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Disjoint"}, "Enable", "")
 AutoDodger2.impactDistanceOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Disjoint"}, "Safe Distance offset", "",100,2000,100)
 AutoDodger2.animationOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Animation"}, "Enable", "")
@@ -743,7 +744,7 @@ function AutoDodger2.ProcessLinearProjectile()
 
         -- do not dodge if ahead of the impact point, and do not dodge if ahead of the max range of the projectile.
         if (impactPos - curPos):Dot(projectileDir) > 0 and (endPos - impactPos):Dot(projectileDir) > 0  then 
-            if NPC.IsPositionInRange(myHero, curPos, AutoDodger2.impactRadius) then
+            if NPC.IsPositionInRange(myHero, curPos, Menu.GetValue(AutoDodger2.impactRadiusDodgeOption)) then
                 AutoDodger2.DodgeLogicProjectile(k,'linear')
                 return
             end 

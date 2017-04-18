@@ -2,8 +2,7 @@ local AutoDodger2 = {}
 
 AutoDodger2.option = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Enable", "Automatically dodges projectiles.")
 AutoDodger2.linearOption = Menu.AddOption({"Utility", "Super Auto Dodger", "Dodge Linear Projectiles"}, "Enable", "")
-AutoDodger2.impactRadiusOption = Menu.AddOption({"Utility", "Super Auto Dodger", "Dodge Linear Projectiles"}, "Move Impact Radius", "",100,1000,100)
-AutoDodger2.impactRadiusDodgeOption = Menu.AddOption({"Utility", "Super Auto Dodger", "Dodge Linear Projectiles"}, "Dodge Impact Radius", "",100,1000,100)
+AutoDodger2.impactRadiusOption = Menu.AddOption({"Utility", "Super Auto Dodger", "Dodge Linear Projectiles"}, "Impact Radius", "",100,1000,100)
 AutoDodger2.disjointOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Disjoint"}, "Enable", "")
 AutoDodger2.impactDistanceOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Disjoint"}, "Safe Distance offset", "",100,2000,100)
 AutoDodger2.animationOption = Menu.AddOption({"Utility", "Super Auto Dodger","Dodge Animation"}, "Enable", "")
@@ -11,7 +10,8 @@ AutoDodger2.castPointOption = Menu.AddOption({"Utility", "Super Auto Dodger","Do
 
 AutoDodger2.skillItemOption = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Use Item First", "Use item first to dodge skills")
 AutoDodger2.skillOption = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Use Skill", "Use skill to dodge skills")
-AutoDodger2.itemOption = Menu.AddOption({"Utility", "Super Auto Dodger"}, "Use Item", "Use item to dodge skills")
+AutoDodger2.itemOption= Menu.AddOption({"Utility", "Super Auto Dodger"}, "Use Item", "Use item to dodge skills")
+AutoDodger2.allItemOption = Menu.AddOption({"Utility", "Super Auto Dodger", "Item"}, "Use All Selected Items", "Use all selected items to dodge skills")
 AutoDodger2.daggerOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use Dagger", "Use Dagger to dodge skills", -1, 10, 1)
 AutoDodger2.blademailOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use BladeMail", "Use BladeMail to defend",-1, 10, 1)
 AutoDodger2.ghostOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use Ghost Scepter", "Use Ghost Scepter to defend",-1, 10, 1)
@@ -22,7 +22,7 @@ AutoDodger2.sbOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "
 AutoDodger2.bkbOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use BKB", "Use BKB to dodge skills",-1, 10, 1)
 AutoDodger2.capeOption = Menu.AddOption({"Utility", "Super Auto Dodger","Item"}, "Use Glimmer Cape", "Use GlimmerCape to dodge skills",-1, 10, 1)
 
-
+AutoDodger2.dodgeTick = 0
 -- logic for specific particle effects will go here.
 AutoDodger2.particleLogic = 
 {
@@ -154,6 +154,7 @@ function AutoDodger2.DodgeLogicItem(key, mode, dodged)
     local blink = NPC.GetItem(myHero, "item_blink")
     local shadowblade = NPC.GetItem(myHero, "item_invis_sword")
     local glimmerCape = NPC.GetItem(myHero, "item_glimmer_cape")
+    local bkb = NPC.GetItem(myHero, "item_black_king_bar")
 
     local myTeam = Entity.GetTeamNum(myHero)
     local myMana = NPC.GetMana(myHero)
@@ -161,54 +162,51 @@ function AutoDodger2.DodgeLogicItem(key, mode, dodged)
     local myName = NPC.GetUnitName(myHero)
     AutoDodger2.setItemOrder()
 
+    local dodgeAll = Menu.IsEnabled(AutoDodger2.allItemOption)
+
     for k,v in ipairs(AutoDodger2.itemOrder) do
         local order = v[1]
         local item = v[2]
         if order ~= -1 then 
-            if not dodged and eul and Ability.IsCastable(eul,myMana) and item == "item_cyclone" then
+            if (not dodged or dodgeAll) and eul and Ability.IsCastable(eul,myMana) and item == "item_cyclone" then
                     Ability.CastTarget(eul,myHero)
                     dodged = true
-                    break
             end 
-            if not dodged and lotus and Ability.IsCastable(lotus,myMana) and item == "item_lotus_orb" then
+            if (not dodged or dodgeAll) and lotus and Ability.IsCastable(lotus,myMana) and item == "item_lotus_orb" then
                     Ability.CastTarget(lotus,myHero)
                     dodged = true
-                    break
             end 
-            if not dodged and bladeMail and Ability.IsCastable(bladeMail,myMana) and item == "item_blade_mail" then
+            if (not dodged or dodgeAll) and bladeMail and Ability.IsCastable(bladeMail,myMana) and item == "item_blade_mail" then
                     Ability.CastNoTarget(bladeMail)
                     dodged = true
-                    break
             end
-            if not dodged and manta and Ability.IsCastable(manta,myMana) and item == "item_manta" then
+            if (not dodged or dodgeAll) and manta and Ability.IsCastable(manta,myMana) and item == "item_manta" then
                     Ability.CastNoTarget(manta)
                     dodged = true
-                    break
             end
-            if not dodged and ghost and Ability.IsCastable(ghost,myMana) and item == "item_ghost" then
+            if (not dodged or dodgeAll) and ghost and Ability.IsCastable(ghost,myMana) and item == "item_ghost" then
                     Ability.CastNoTarget(ghost)
                     dodged = true
-                    break
             end 
-            if not dodged and eblade and Ability.IsCastable(eblade,myMana) and item == "item_ethereal_blade" then
+            if (not dodged or dodgeAll) and eblade and Ability.IsCastable(eblade,myMana) and item == "item_ethereal_blade" then
                     Ability.CastTarget(eblade,myHero)
                     dodged = true
-                    break
             end
-            if not dodged and blink and Ability.IsCastable(blink,myMana) and item == "item_blink" then
+            if (not dodged or dodgeAll) and blink and Ability.IsCastable(blink,myMana) and item == "item_blink" then
                     AutoDodger2.DodgeByMoveForward(myHero, 1199, blink)
                     dodged = true
-                    break
             end
-            if not dodged and shadowblade and Ability.IsCastable(shadowblade,myMana) and item == "item_invis_sword" then
+            if (not dodged or dodgeAll) and shadowblade and Ability.IsCastable(shadowblade,myMana) and item == "item_invis_sword" then
                     Ability.CastNoTarget(shadowblade)
                     dodged = true
-                    break
             end
-            if not dodged and glimmerCape and Ability.IsCastable(glimmerCape,myMana) and item == "item_glimmer_cape" then
+            if (not dodged or dodgeAll) and glimmerCape and Ability.IsCastable(glimmerCape,myMana) and item == "item_glimmer_cape" then
                     Ability.CastTarget(glimmerCape,myHero)
                     dodged = true
-                    break
+            end
+            if (not dodged or dodgeAll) and bkb and Ability.IsCastable(bkb,myMana) and item == "item_black_king_bar" then
+                    Ability.CastNoTarget(bkb)
+                    dodged = true
             end
         end 
     end
@@ -229,6 +227,7 @@ function AutoDodger2.DodgeLogicSkill(key, mode, dodged)
         local skill = NPC.GetAbility(myHero, "puck_phase_shift")
         if skill and Ability.IsReady(skill) and Ability.IsCastable(skill,myMana) then 
             Ability.CastNoTarget(skill)
+            AutoDodger2.dodgeTick = GameRules.GetGameTime()+1
             dodged = true
         end 
     end 
@@ -554,7 +553,7 @@ function AutoDodger2.OnProjectile(projectile)
     local delay = (distanceLenth/projectile.moveSpeed) 
     delay = math.max(delay, 0.001)
     Log.Write(projectile.name)
-    if AutoDodger2.projectileMap[projectile.name] and AutoDodger2.projectileMapRev[AutoDodger2.projectileMap[projectile.name].ability].selected or not AutoDodger2.projectileMap[projectile.name] then 
+    if (AutoDodger2.projectileMap[projectile.name] and AutoDodger2.projectileMapRev[AutoDodger2.projectileMap[projectile.name].ability].selected or not AutoDodger2.projectileMap[projectile.name]) and not AutoDodger2.ignoredDisjoint[projectile.name] then 
     -- table.insert(AutoDodger2.projectileQueue, {GameRules.GetGameTime()+delay,projectile.name})
         AutoDodger2.projectileQueue[projectile.particleSystemHandle] = { 
             source = projectile.source,
@@ -644,6 +643,12 @@ function AutoDodger2.OnUnitAnimation(animation)
         AutoDodger2.AnimationQueueLength = AutoDodger2.AnimationQueueLength + 1
     end 
 end 
+
+function AutoDodger2.OnPrepareUnitOrders(orders)
+    if not Menu.IsEnabled(AutoDodger2.option) then return true end
+    if GameRules.GetGameTime()>AutoDodger2.dodgeTick then return true end 
+    return false
+end
 --------------------------------------------------------------------------------------------------
 function AutoDodger2.OnParticleCreate(particle)
     --Log.Write(particle.name)
@@ -743,15 +748,9 @@ function AutoDodger2.ProcessLinearProjectile()
         local endPos = v.origin + projectileDir:Scaled(AutoDodger2.GetRange(v.index))
 
         -- do not dodge if ahead of the impact point, and do not dodge if ahead of the max range of the projectile.
-        if (impactPos - curPos):Dot(projectileDir) > 0 and (endPos - impactPos):Dot(projectileDir) > 0  then 
-            if NPC.IsPositionInRange(myHero, curPos, Menu.GetValue(AutoDodger2.impactRadiusDodgeOption)) then
-                AutoDodger2.DodgeLogicProjectile(k,'linear')
-                return
-            end 
-            if NPC.IsPositionInRange(myHero, impactPos, AutoDodger2.impactRadius) then
-                local impactDir = (myPos - impactPos):Normalized() 
-                table.insert(movePositions, impactPos + impactDir:Scaled(AutoDodger2.impactRadius + NPC.GetHullRadius(myHero) + 10))
-            end 
+        if (impactPos - curPos):Dot(projectileDir) > 0 and (endPos - impactPos):Dot(projectileDir) > 0 and NPC.IsPositionInRange(myHero, impactPos, AutoDodger2.impactRadius) then 
+            local impactDir = (myPos - impactPos):Normalized() 
+            table.insert(movePositions, impactPos + impactDir:Scaled(AutoDodger2.impactRadius + NPC.GetHullRadius(myHero) + 10))
         end
     end
 
@@ -767,6 +766,7 @@ function AutoDodger2.ProcessLinearProjectile()
     end
 
     AutoDodger2.movePos = Vector(AutoDodger2.movePos:GetX() / #movePositions, AutoDodger2.movePos:GetY() / #movePositions, myPos:GetZ())
+    if NPC.IsChannellingAbility(myHero) then return end 
     Player.PrepareUnitOrders(Players.GetLocal(), Enum.UnitOrder.DOTA_UNIT_ORDER_MOVE_TO_POSITION, nil, AutoDodger2.movePos, nil, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, myHero, false, true)
 
     AutoDodger2.nextDodgeTime = GameRules.GetGameTime() + NetChannel.GetAvgLatency(Enum.Flow.FLOW_OUTGOING) + 0.03
@@ -1299,4 +1299,7 @@ AutoDodger2.projectileMap['windrunner_shackleshot'] = {ability='windrunner_shack
 AutoDodger2.projectileMapRev['windrunner_shackleshot'] = {selected=true}
 AutoDodger2.projectileMap['orge_magi_ignite'] = {ability='ogre_magi_ignite'} 
 AutoDodger2.projectileMapRev['ogre_magi_ignite'] = {selected=true}
+
+AutoDodger2.ignoredDisjoint={}
+AutoDodger2.ignoredDisjoint['tinker_laser'] = true
 return AutoDodger2

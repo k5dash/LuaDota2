@@ -631,8 +631,9 @@ function AutoDodger2.OnUnitAnimation(animation)
     local enemy = animation.unit
     local enemyName = NPC.GetUnitName(animation.unit)
 
-    Log.Write(animation.sequenceName)
+    --Log.Write(animation.sequenceName.."    Animation")
     if AutoDodger2.animationMap[sequenceName] and AutoDodger2.animationMapReverse[AutoDodger2.animationMap[sequenceName].ability].selected then
+        Log.Write("Yay")
         AutoDodger2.AnimationQueue[sequenceName] ={
             time = GameRules.GetGameTime()+animation.castpoint,
             sequenceName = sequenceName,
@@ -749,25 +750,30 @@ function AutoDodger2.ProcessLinearProjectile()
 
         -- do not dodge if ahead of the impact point, and do not dodge if ahead of the max range of the projectile.
         if (impactPos - curPos):Dot(projectileDir) > 0 and (endPos - impactPos):Dot(projectileDir) > 0 and NPC.IsPositionInRange(myHero, impactPos, AutoDodger2.impactRadius) then 
-            local impactDir = (myPos - impactPos):Normalized() 
-            table.insert(movePositions, impactPos + impactDir:Scaled(AutoDodger2.impactRadius + NPC.GetHullRadius(myHero) + 10))
+            if Menu.GetValue(AutoDodger2.skillItemOption) then
+                local dodged = AutoDodger2.DodgeLogicItem(key, mode, false) 
+                AutoDodger2.DodgeLogicSkill(key, mode, dodged)
+            else
+                local dodged = AutoDodger2.DodgeLogicSkill(key, mode,false)
+                AutoDodger2.DodgeLogicItem(key, mode, dodged) 
+            end 
         end
     end
 
-    if #movePositions == 0 then
-        AutoDodger2.active = false
-        return
-    end
+    -- if #movePositions == 0 then
+    --     AutoDodger2.active = false
+    --     return
+    -- end
 
-    AutoDodger2.movePos = Vector()
+    -- AutoDodger2.movePos = Vector()
 
-    for k, v in pairs(movePositions) do
-        AutoDodger2.movePos = AutoDodger2.movePos + v
-    end
+    -- for k, v in pairs(movePositions) do
+    --     AutoDodger2.movePos = AutoDodger2.movePos + v
+    -- end
 
-    AutoDodger2.movePos = Vector(AutoDodger2.movePos:GetX() / #movePositions, AutoDodger2.movePos:GetY() / #movePositions, myPos:GetZ())
-    if NPC.IsChannellingAbility(myHero) then return end 
-    Player.PrepareUnitOrders(Players.GetLocal(), Enum.UnitOrder.DOTA_UNIT_ORDER_MOVE_TO_POSITION, nil, AutoDodger2.movePos, nil, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, myHero, false, true)
+    -- AutoDodger2.movePos = Vector(AutoDodger2.movePos:GetX() / #movePositions, AutoDodger2.movePos:GetY() / #movePositions, myPos:GetZ())
+    -- if NPC.IsChannellingAbility(myHero) then return end 
+    -- Player.PrepareUnitOrders(Players.GetLocal(), Enum.UnitOrder.DOTA_UNIT_ORDER_MOVE_TO_POSITION, nil, AutoDodger2.movePos, nil, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, myHero, false, true)
 
     AutoDodger2.nextDodgeTime = GameRules.GetGameTime() + NetChannel.GetAvgLatency(Enum.Flow.FLOW_OUTGOING) + 0.03
     AutoDodger2.active = true

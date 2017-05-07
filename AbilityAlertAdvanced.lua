@@ -51,7 +51,7 @@ AbilityAlert2.ambiguous =
         name = "bounty_hunter_windwalk",
         msg ='bounty is invisiable',
         ability = "bounty_hunter_wind_walk",
-        duration = 4,
+        duration = 8,
         unique = true
     },
     {  
@@ -411,6 +411,90 @@ AbilityAlert2.ambiguous =
         ability = "pugna_nether_blast",
         duration = 4,
         unique = true
+    },
+    {  
+        name = "monkey_king_strike_cast",
+        msg ='',
+        ability = "monkey_king_boundless_strike",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "monkey_king_jump_trail",
+        msg ='',
+        ability = "monkey_king_tree_dance",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "monkey_king_jump_launch_ring",
+        msg ='',
+        ability = "monkey_king_tree_dance",
+        duration = 4,
+        unique = true
+    },
+     {  
+        name = "monkey_king_spring_channel",
+        msg ='',
+        ability = "monkey_king_primal_spring",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "axe_counterhelix",
+        msg ='',
+        ability = "axe_counter_helix",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "legion_commander_courage_hit",
+        msg ='',
+        ability = "legion_commander_moment_of_courage",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "legion_commander_press_owner",
+        msg ='',
+        ability = "legion_commander_press_the_attack",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "stormspirit_overload_discharge",
+        msg ='',
+        ability = "storm_spirit_overload",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "tinker_missile_dud",
+        msg ='',
+        ability = "tinker_heat_seeking_missile",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "tidehunter_anchor_hero",
+        msg ='',
+        ability = "tidehunter_anchor_smash",
+        duration = 4,
+        unique = true
+    },
+    {  
+        name = "techies_remote_mine_plant",
+        msg ='',
+        ability = "techies_remote_mines",
+        duration = 100,
+        unique = true
+    },
+    {  
+        name = "techies_stasis_trap_plant",
+        msg ='',
+        ability = "techies_stasis_trap",
+        duration = 100,
+        unique = true
     }
 }
 
@@ -513,8 +597,7 @@ end
 -- Callbacks
 --
 function AbilityAlert2.OnParticleCreate(particle)
-    --Log.Write(particle.name .. ",=")
-
+    Log.Write(particle.name .. ",=")
     if not Menu.IsEnabled(AbilityAlert2.option) then return end
 
     if not AbilityAlert2.InsertAmbiguous(particle) then
@@ -523,9 +606,8 @@ function AbilityAlert2.OnParticleCreate(particle)
 end
 
 function AbilityAlert2.OnParticleUpdate(particle)
-    --Log.Write("position"..particle.position:__tostring())
+    Log.Write("position"..particle.position:__tostring())
     if particle.controlPoint ~= 0 then return end
-
     for k, alert in ipairs(AbilityAlert2.alerts) do
         if particle.index == alert.index then
             alert.position = particle.position
@@ -601,7 +683,6 @@ end
 
 --     Log.Write(NPC.GetAbsOrigin(animation.unit):__tostring())
 -- end 
-
 
 function AbilityAlert2.drawMiniHeroOnMap(x,y,enemyName)
     if not enemyName then return end

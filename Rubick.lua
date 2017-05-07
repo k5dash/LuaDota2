@@ -24,6 +24,7 @@ Rubick.InsertColor("Black", 0, 0, 0)
 
 Rubick.levelColorOption = Menu.AddOption({  "Hero Specific", "Rubick","Advanced" }, "Display Level Color", "", 1, #Rubick.colors, 1)
 Rubick.pickedSkills ={}
+Rubick.skillCoolDown ={}
 
 Rubick.TimeTick = 0
 
@@ -46,11 +47,15 @@ function Rubick.OnUpdate()
 
     if not ultimate or Ability.GetCooldownTimeLeft(ultimate)>0 or not Ability.IsCastable(ultimate, myMana) then return end
     local currentSkill = NPC.GetAbilityByIndex(myHero,4)
+    if currentSkill and Ability.GetName(currentSkill)~="rubick_empty1" then
+        Rubick.skillCoolDown[Ability.GetName(currentSkill)] = GameRules.GetGameTime() + Ability.GetCooldownTimeLeft(currentSkill)
+    end 
+
     local target
     local skillTarget
     for i = 1, Heroes.Count() do
         local hero = Heroes.Get(i)
-        if not Entity.IsSameTeam(myHero, hero) and not Entity.IsDormant(hero) and not NPC.IsIllusion(hero) and NPC.IsEntityInRange(hero, myHero, 2750) then
+        if not Entity.IsSameTeam(myHero, hero) and not Entity.IsDormant(hero) and not NPC.IsIllusion(hero) and NPC.IsEntityInRange(hero, myHero, 1000+NPC.GetCastRangeBonus(myHero)) then
             local candidateTime = 99999
             local candidateSkill
             for j = 0, 24 do
@@ -72,14 +77,12 @@ function Rubick.OnUpdate()
             local candidateOrder = Rubick.findIndex(candidateSkill)
             if candidateSkill then
                 if skillTarget then
-                    if Rubick.findIndex(skillTarget) > candidateOrder and (not currentSkill or currentSkill and Ability.GetName(skillTarget)~=Ability.GetName(currentSkill)) then 
-                        Log.Write("hey")
+                    if Rubick.findIndex(skillTarget) > candidateOrder and (not currentSkill or currentSkill and Ability.GetName(skillTarget)~=Ability.GetName(currentSkill)) and (not Rubick.skillCoolDown[Ability.GetName(candidateSkill)] or Rubick.skillCoolDown[Ability.GetName(candidateSkill)] < GameRules.GetGameTime()) then 
                         skillTarget = candidateSkill
                         target = hero
                     end 
                 else 
-                    if not currentSkill or Ability.GetName(candidateSkill)~=Ability.GetName(currentSkill) then
-                        Log.Write("yo")
+                    if (not currentSkill or Ability.GetName(candidateSkill)~=Ability.GetName(currentSkill)) and (not Rubick.skillCoolDown[Ability.GetName(candidateSkill)] or Rubick.skillCoolDown[Ability.GetName(candidateSkill)] < GameRules.GetGameTime()) then
                         skillTarget = candidateSkill
                         target = hero
                     end 
@@ -89,7 +92,6 @@ function Rubick.OnUpdate()
     end
 
     if skillTarget and not NPC.IsChannellingAbility(myHero) then
-                            Log.Write(Ability.GetName(skillTarget))
         local candidateOrder = Rubick.findIndex(skillTarget);
         if currentSkill and Rubick.pickedSkills[Ability.GetName(currentSkill)] then
             if Rubick.findIndex(currentSkill)>candidateOrder or (Ability.GetCooldownTimeLeft(currentSkill)>8 and Rubick.findIndex(currentSkill)~=candidateOrder)then
@@ -121,6 +123,7 @@ function Rubick.InitDisplay()
     local w, h = Renderer.GetScreenSize()
     Rubick.w = math.floor(w/2)
     Rubick.h = math.floor(h/2)
+    Rubick.pickedSkills ={}
 end
 
 -- callback

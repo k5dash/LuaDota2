@@ -2,7 +2,7 @@ local Rubick = {}
 
 Rubick.option = Menu.AddOption({ "Hero Specific", "Rubick", "Advanced"}, "Enable", "")
 Rubick.boxSizeOption = Menu.AddOption({ "Hero Specific", "Rubick","Advanced" }, "Display Size", "", 21, 64, 1)
-Rubick.skillPickerOption = Menu.AddOption({ "Hero Specific", "Rubick", "Advanced"}, "Skill Picker", "")
+Rubick.optionKey = Menu.AddKeyOption({"Hero Specific", "Rubick", "Advanced"}, "Key", Enum.ButtonCode.KEY_P)
 Rubick.needsInit = true
 Rubick.spellIconPath = "resource/flash3/images/spellicons/"
 Rubick.cachedIcons = {}
@@ -94,13 +94,15 @@ function Rubick.OnUpdate()
     if skillTarget and not NPC.IsChannellingAbility(myHero) then
         local candidateOrder = Rubick.findIndex(skillTarget);
         if currentSkill and Rubick.pickedSkills[Ability.GetName(currentSkill)] then
-            if Rubick.findIndex(currentSkill)>candidateOrder or (Ability.GetCooldownTimeLeft(currentSkill)>8 and Rubick.findIndex(currentSkill)~=candidateOrder)then
+            if (Rubick.findIndex(currentSkill)>candidateOrder or (Ability.GetCooldownTimeLeft(currentSkill)>8 and Rubick.findIndex(currentSkill)~=candidateOrder)) and NPC.IsVisible(myHero) then
                 Ability.CastTarget(ultimate, target)
                 Rubick.TimeTick = GameRules.GetGameTime() +2
             end 
         else
-            Ability.CastTarget(ultimate, target)
-            Rubick.TimeTick = GameRules.GetGameTime() +2
+            if NPC.IsVisible(myHero) then 
+                Ability.CastTarget(ultimate, target)
+                Rubick.TimeTick = GameRules.GetGameTime() +2
+            end
         end 
     end 
 end 
@@ -341,7 +343,7 @@ end
 
 function Rubick.OnDraw()
     if not Menu.IsEnabled(Rubick.option) then return end
-    if not Menu.IsEnabled(Rubick.skillPickerOption) then return end
+    if not Menu.IsKeyDown(Rubick.optionKey) then return end
 
     local myHero = Heroes.GetLocal()
     if not myHero then return end 

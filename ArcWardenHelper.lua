@@ -2,16 +2,26 @@ local ArcHelper= {}
 ArcHelper.optionEnable = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Enable", "Arc Warden Help Scrip")
 ArcHelper.optionKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Clone Combo", Enum.ButtonCode.KEY_P)
 ArcHelper.optionMainKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Main Hero Combo", Enum.ButtonCode.KEY_P)
+ArcHelper.pushKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Clone Push", Enum.ButtonCode.KEY_P)
 
 ArcHelper.cache = {}
 
 ArcHelper.clone = nil
 ArcHelper.cloneAttacking = false
+ArcHelper.clonePushing =  false
 ArcHelper.cloneAttackingTarget = nil
 ArcHelper.cloneTick = 0
+ArcHelper.clonePushTick = 0
 ArcHelper.font = Renderer.LoadFont("Tahoma", 50, Enum.FontWeight.EXTRABOLD)
 
 ArcHelper.mainTick = 0
+function ArcHelper.init()
+	ArcHelper.clone = nil
+	ArcHelper.cloneAttacking = false
+	ArcHelper.clonePushing =  false
+	ArcHelper.cloneAttackingTarget = nil
+	ArcHelper.cloneTick = 0
+end
 
 function ArcHelper.OnUpdate()
 	if not Menu.IsEnabled(ArcHelper.optionEnable) then return end
@@ -26,56 +36,52 @@ function ArcHelper.OnUpdate()
 			ArcHelper.mainAttack()
 		end 
 	end 
+
+
 	local ultimate = NPC.GetAbilityByIndex(myHero,3)
-	if ArcHelper.clone == nil then
+	if Menu.IsKeyDownOnce(ArcHelper.optionKey) then
+		--
+		if Ability.IsReady(ultimate) then
+			ArcHelper.cloneAttacking = true
+			ArcHelper.clonePushing = false
+			Ability.CastNoTarget(ultimate)
+		else 
+			ArcHelper.cloneAttacking = not ArcHelper.cloneAttacking
+		end
+	end 
+
+	if Menu.IsKeyDownOnce(ArcHelper.pushKey) then
+		if Ability.IsReady(ultimate) then
+			ArcHelper.clonePushing = true
+			Ability.CastNoTarget(ultimate)
+		else 
+			ArcHelper.cloneAttacking = not ArcHelper.cloneAttacking
+		end
+	end 
+
+	if ArcHelper.clone == nil and ultimate and Ability.GetLevel(ultimate)>0 then
 		for i= 1, NPCs.Count() do
 			local entity = NPCs.Get(i)
-				if entity then 
-					local name = NPC.GetUnitName(entity)
-					if name == "npc_dota_hero_arc_warden" and myHero~= entity then
-						ArcHelper.clone = entity
-					end 
+			if entity and NPC.IsEntityInRange(myHero, entity, 200) then 
+				local name = NPC.GetUnitName(entity)
+				if name == "npc_dota_hero_arc_warden" and myHero~= entity then
+					ArcHelper.clone = entity
 				end 
-		end
-
-		if Menu.IsKeyDownOnce(ArcHelper.optionKey) then
-			ArcHelper.cloneAttacking = not ArcHelper.cloneAttacking
-			--
-			if Ability.IsReady(ultimate) then
-				Ability.CastNoTarget(ultimate)
 			end 
-		end 
+		end
 		return
 	end
-
 
 	if not Entity.IsAlive(ArcHelper.clone) and not Ability.IsReady(ultimate) then 
 		ArcHelper.cloneAttacking = false
 		ArcHelper.cloneAttackingTarget = nil
+		return
 	end
 
 	if ArcHelper.clone and Entity.IsAlive(ArcHelper.clone) then 
 		ArcHelper.useMidas(ArcHelper.clone)
 	end 
-
-	if Menu.IsKeyDownOnce(ArcHelper.optionKey) then
-		ArcHelper.cloneAttacking = not ArcHelper.cloneAttacking
-		--
-		if Ability.IsReady(ultimate) then
-			Ability.CastNoTarget(ultimate)
-		end 
-		if ArcHelper.cloneAttacking == true then
-			local target = Input.GetNearestHeroToCursor(Entity.GetTeamNum(myHero), Enum.TeamType.TEAM_ENEMY)
-
-			if not NPC.IsEntityInRange(target, ArcHelper.clone, 2000) then
-				target = nil
-			end 
-			ArcHelper.cloneAttackingTarget = target
-		end 
-	end 
-	
-
-	
+	ArcHelper.clonePush()
 	ArcHelper.cloneAttack()
 end
 
@@ -87,6 +93,7 @@ function ArcHelper.autoDefend(myHero)
     local orchid = NPC.GetItem(myHero,"item_orchid")
     local bloodthorn = NPC.GetItem(myHero,"item_bloodthorn")
     local hex = NPC.GetItem(myHero, "item_sheepstick")
+    if not orchid and not bloodthorn and not hex then return end 
     for i= 1, Heroes.Count() do
         local enemy = Heroes.Get(i)
         local sameTeam = Entity.GetTeamNum(enemy) == myTeam
@@ -200,8 +207,45 @@ function ArcHelper.mainAttack()
 				return
 			end 
 			Player.AttackTarget(Players.GetLocal(), myHero, target) 
+			ArcHelper.mainTick = GameRules.GetGameTime() + NPC.GetAttackTime(myHero)
 		end 
 end
+
+function ArcHelper.GetClosestLaneCreepsToMouse()
+	local max_distance = 9999999
+	local candidate = nil
+	local mousePos = Input.GetWorldCursorPos()
+	for i= 1, NPCs.Count() do
+		local entity = NPCs.Get(i)
+		if entity and NPC.IsLaneCreep(entity) and NPC.IsRanged(entity) then 
+			local creepPos = Entity.GetAbsOrigin(entity)
+			local dist = creepPos -  mousePos
+			local len = dist:Length2D()
+			if len<max_distance then
+				max_distance = len
+				candidate = entity
+			end
+		end 
+	end
+	return candidate
+end 
+
+function ArcHelper.clonePush()
+	if not Entity.IsAlive(ArcHelper.clone) then return end 
+	if not ArcHelper.clonePushing then return end 
+	if GameRules.GetGameTime() < ArcHelper.clonePushTick then return end 
+	local myHero = Heroes.GetLocal()
+	local bot = NPC.GetItem(ArcHelper.clone, "item_travel_boots")
+	ArcHelper.clonePushTick = GameRules.GetGameTime() + 3
+	local creep = nil
+	if Ability.IsReady(bot) then
+		creep = ArcHelper.GetClosestLaneCreepsToMouse()
+	end 
+	
+	if bot and Ability.IsReady(bot) and creep then
+		Ability.CastPosition(bot, Entity.GetAbsOrigin(creep))
+	end 
+end 
 
 function ArcHelper.cloneAttack()
 	if not Entity.IsAlive(ArcHelper.clone) then return end 
@@ -257,7 +301,9 @@ function ArcHelper.cloneAttack()
 				Ability.CastTarget(orchid,ArcHelper.cloneAttackingTarget)
 			end 
 			if mjollnir and Ability.IsReady(mjollnir) then
+				ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 				Ability.CastTarget(mjollnir,ArcHelper.clone)
+				return
 			end 
 			if Ability.IsReady(flux) then
 				ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
@@ -288,6 +334,7 @@ function ArcHelper.cloneAttack()
 				return
 			end 
 			Player.AttackTarget(Players.GetLocal(), ArcHelper.clone, ArcHelper.cloneAttackingTarget) 
+			ArcHelper.cloneTick = GameRules.GetGameTime() + NPC.GetAttackTime(myHero)/2
 		end 
 	end 
 end
@@ -295,12 +342,8 @@ end
 function ArcHelper.OnDraw()
 	if not Menu.IsEnabled(ArcHelper.optionEnable) then return end
 	if not Engine.IsInGame() then
-		ArcHelper.clone = nil
-		ArcHelper.cloneAttacking = false
-		ArcHelper.cloneAttackingTarget = nil
-		ArcHelper.cloneTick = 0
-
-		ArcHelper.mainTick = 0
+		ArcHelper.init()
+		return 
 	end 
 	-- local myHero = Heroes.GetLocal()
 	-- local modifiers = NPC.GetModifiers(myHero)

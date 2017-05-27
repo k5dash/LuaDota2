@@ -12,7 +12,13 @@ ArcHelper.clonePushing =  false
 ArcHelper.cloneAttackingTarget = nil
 ArcHelper.cloneTick = 0
 ArcHelper.clonePushTick = 0
+ArcHelper.clonePushCreep = nil
 ArcHelper.font = Renderer.LoadFont("Tahoma", 50, Enum.FontWeight.EXTRABOLD)
+
+ArcHelper.enemyFountain = nil
+ArcHelper.dummy = nil
+ArcHelper.needTP = true
+
 
 ArcHelper.mainTick = 0
 function ArcHelper.init()
@@ -21,6 +27,9 @@ function ArcHelper.init()
 	ArcHelper.clonePushing =  false
 	ArcHelper.cloneAttackingTarget = nil
 	ArcHelper.cloneTick = 0
+	ArcHelper.clonePushTick = 0
+	ArcHelper.clonePushCreep = nil
+	ArcHelper.enemyFountain = nil
 end
 
 function ArcHelper.OnUpdate()
@@ -37,6 +46,14 @@ function ArcHelper.OnUpdate()
 		end 
 	end 
 
+	if not ArcHelper.enemyFountain then
+		local enemyTeamNum =2
+		if Entity.GetTeamNum(myHero) == 2 then
+			enemyTeamNum = 3
+		end 
+		ArcHelper.enemyFountain = ArcHelper.foundFountain(enemyTeamNum)
+		Log.Write(ArcHelper.enemyFountain:__tostring())
+	end 
 
 	local ultimate = NPC.GetAbilityByIndex(myHero,3)
 	if Menu.IsKeyDownOnce(ArcHelper.optionKey) then
@@ -49,18 +66,21 @@ function ArcHelper.OnUpdate()
 			ArcHelper.cloneAttacking = not ArcHelper.cloneAttacking
 			if not ArcHelper.cloneAttacking then
 				ArcHelper.cloneAttackingTarget = nil
+			else
+				ArcHelper.clonePushing = false
 			end 
 		end
 	end 
 
 	if Menu.IsKeyDownOnce(ArcHelper.pushKey) then
 		if Ability.IsReady(ultimate) then
-			ArcHelper.clonePushing = true
 			Ability.CastNoTarget(ultimate)
-		else 
-			ArcHelper.cloneAttacking = not ArcHelper.cloneAttacking
 		end
+		ArcHelper.clonePushing = true
+		ArcHelper.cloneAttacking = false
+		ArcHelper.clonePushCreep = ArcHelper.GetClosestLaneCreepsToPos(Input.GetWorldCursorPos(), true, true)
 	end 
+
 
 	if ArcHelper.clone == nil and ultimate and Ability.GetLevel(ultimate)>0 then
 		for i= 1, NPCs.Count() do
@@ -77,7 +97,11 @@ function ArcHelper.OnUpdate()
 
 	if not Entity.IsAlive(ArcHelper.clone) and not Ability.IsReady(ultimate) then 
 		ArcHelper.cloneAttacking = false
+		ArcHelper.clonePushing =  false
 		ArcHelper.cloneAttackingTarget = nil
+		ArcHelper.cloneTick = 0
+		ArcHelper.clonePushTick = 0
+		ArcHelper.clonePushCreep = nil
 		return
 	end
 
@@ -86,6 +110,19 @@ function ArcHelper.OnUpdate()
 	end 
 	ArcHelper.clonePush()
 	ArcHelper.cloneAttack()
+end
+
+function ArcHelper.foundFountain(teamNum)
+	for i = 1, NPCs.Count() do 
+        local npc = NPCs.Get(i)
+
+        if Entity.GetTeamNum(npc) == teamNum and NPC.IsStructure(npc) then
+            local name = NPC.GetUnitName(npc)
+            if name ~= nil and name == "dota_fountain" then
+                return NPC.GetAbsOrigin(npc)
+            end
+        end
+    end
 end
 
 function ArcHelper.autoDefend(myHero)
@@ -221,15 +258,15 @@ function ArcHelper.mainAttack()
 		end 
 end
 
-function ArcHelper.GetClosestLaneCreepsToMouse()
+function ArcHelper.GetClosestLaneCreepsToPos(pos, isRanged, isAlly)
+	if not ArcHelper.clone then return end 
 	local max_distance = 9999999
 	local candidate = nil
-	local mousePos = Input.GetWorldCursorPos()
 	for i= 1, NPCs.Count() do
 		local entity = NPCs.Get(i)
-		if entity and NPC.IsLaneCreep(entity) and NPC.IsRanged(entity) then 
+		if entity and NPC.IsLaneCreep(entity) and Entity.IsAlive(entity) and (isRanged and NPC.IsRanged(entity) or not isRanged and not NPC.IsRanged(entity)) and (isAlly and Entity.IsSameTeam(ArcHelper.clone, entity) or not isAlly and not Entity.IsSameTeam(ArcHelper.clone, entity)) then
 			local creepPos = Entity.GetAbsOrigin(entity)
-			local dist = creepPos -  mousePos
+			local dist = creepPos -  pos
 			local len = dist:Length2D()
 			if len<max_distance then
 				max_distance = len
@@ -244,18 +281,50 @@ function ArcHelper.clonePush()
 	if not Entity.IsAlive(ArcHelper.clone) then return end 
 	if not ArcHelper.clonePushing then return end 
 	if GameRules.GetGameTime() < ArcHelper.clonePushTick then return end 
+	if NPC.IsChannellingAbility(ArcHelper.clone) then return end 
+
 	local myHero = Heroes.GetLocal()
 	local bot = NPC.GetItem(ArcHelper.clone, "item_travel_boots")
-	ArcHelper.clonePushTick = GameRules.GetGameTime() + 3
-	local creep = nil
-	if bot and Ability.IsReady(bot) then
-		creep = ArcHelper.GetClosestLaneCreepsToMouse()
-	end 
 	
-	if bot and Ability.IsReady(bot) and creep then
-		Ability.CastPosition(bot, Entity.GetAbsOrigin(creep))
+	local creep =  ArcHelper.GetClosestLaneCreepsToPos(Entity.GetAbsOrigin(ArcHelper.clone), false, true)
+
+	if bot and not Ability.IsReady(bot) then 
+		ArcHelper.clonePushCreep = nil
 	end 
+
+	if bot and Ability.IsReady(bot) and ArcHelper.clonePushCreep and not NPC.IsEntityInRange(ArcHelper.clone, ArcHelper.clonePushCreep, 1500) then --and (not creep or not ArcHelper.closerToFountain(myHero, creep))
+		Ability.CastPosition(bot, Entity.GetAbsOrigin(ArcHelper.clonePushCreep))
+		ArcHelper.clonePushTick = GameRules.GetGameTime() + 1
+		return
+	end
+
+	if not creep then return end  
+	if NPC.IsEntityInRange(ArcHelper.clone, creep, 500) then
+		Player.PrepareUnitOrders(Players.GetLocal(), Enum.UnitOrder.DOTA_UNIT_ORDER_ATTACK_MOVE, creep, Entity.GetAbsOrigin(creep), ability, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, ArcHelper.clone, queue, true)
+		ArcHelper.clonePushTick = GameRules.GetGameTime() + 0.3
+	else
+
+		-- if ArcHelper.closerToFountain(myHero, creep) then
+		-- 	Player.PrepareUnitOrders(Players.GetLocal(), Enum.UnitOrder.DOTA_UNIT_ORDER_ATTACK_MOVE, nil, ArcHelper.enemyFountain, ability, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, ArcHelper.clone, queue, true)
+		-- 	ArcHelper.clonePushTick = GameRules.GetGameTime() + 1
+
+		-- 	return
+		-- end
+
+		Player.PrepareUnitOrders(Players.GetLocal(), Enum.UnitOrder.DOTA_UNIT_ORDER_MOVE_TO_TARGET, creep, Vector(), ability, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, ArcHelper.clone, queue, true)
+		ArcHelper.clonePushTick = GameRules.GetGameTime() + 1
+	end
 end 
+
+function ArcHelper.closerToFountain(myHero, creep)
+	local creepPos = Entity.GetAbsOrigin(creep)
+	local dist1 = creepPos -  ArcHelper.enemyFountain
+	local len1 = dist1:Length2D()
+	local dist2 = Entity.GetAbsOrigin(myHero) - ArcHelper.enemyFountain
+	local len2 = dist2:Length2D()
+	if len2 < len1 then return true end
+	return false
+end
 
 function ArcHelper.cloneAttack()
 	if not Entity.IsAlive(ArcHelper.clone) then return end 
@@ -314,7 +383,7 @@ function ArcHelper.cloneAttack()
 					ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 					return
 				else 
-					Player.PrepareUnitOrders(Players.GetLocal(), Enum.UnitOrder.DOTA_UNIT_ORDER_MOVE_TO_TARGET, ArcHelper.cloneAttackingTarget, Vector(), ability, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, ArcHelper.clone, queue, trues)
+					Player.PrepareUnitOrders(Players.GetLocal(), Enum.UnitOrder.DOTA_UNIT_ORDER_MOVE_TO_TARGET, ArcHelper.cloneAttackingTarget, Vector(), ability, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, ArcHelper.clone, queue, true)
 					ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 				end 
 				return 
@@ -401,7 +470,7 @@ function ArcHelper.useMidas(myHero)
 	if not midas then return end 
 	for i= 1, NPCs.Count() do
 		local entity = NPCs.Get(i) 
-		if entity and not Entity.IsSameTeam(myHero, entity) and (NPC.IsCreep(entity) or NPC.IsLaneCreep(entity) or NPC.IsNeutral(entity)) and NPC.IsEntityInRange(myHero, entity, 600) then
+		if entity and not Entity.IsSameTeam(myHero, entity) and (NPC.IsCreep(entity) or NPC.IsLaneCreep(entity) or NPC.IsNeutral(entity)) and not NPC.IsAncient(entity) and NPC.IsEntityInRange(myHero, entity, 800) then
 			if Ability.IsReady(midas) then
 				Ability.CastTarget(midas, entity)
 				return
@@ -429,6 +498,26 @@ function ArcHelper.DrawCloneSwitchMsg()
 	else 
 		Renderer.DrawTextCentered(ArcHelper.font, w / 2, h / 2 + 300, "OFF", 1)
 	end
+	if ArcHelper.clonePushing then
+		Renderer.DrawTextCentered(ArcHelper.font, w / 2, h / 2 + 350, "PUSHING", 1)
+	else 
+
+	end
+
+	-- if ArcHelper.dummy then 
+	-- 	local x, y, vis = Renderer.WorldToScreen(Entity.GetAbsOrigin(ArcHelper.dummy))
+	-- 	local x1, y1, vis1 = Renderer.WorldToScreen(ArcHelper.enemyFountain)
+	-- 	Renderer.DrawLine(x, y, x1, y1)
+	-- 	Renderer.DrawTextCentered(ArcHelper.font, x, y, "CREEP", 1)
+	-- end 
+
+	-- if ArcHelper.enemyFountain then 
+	-- 	local x, y, vis = Renderer.WorldToScreen(Entity.GetAbsOrigin(ArcHelper.clone))
+	-- 	local x1, y1, vis1 = Renderer.WorldToScreen(ArcHelper.enemyFountain)
+	-- 	Renderer.DrawLine(x, y, x1, y1)
+	-- 	Renderer.DrawTextCentered(ArcHelper.font, x1, y1, "Fountain", 1)
+	-- end 
+
 end 
 
 

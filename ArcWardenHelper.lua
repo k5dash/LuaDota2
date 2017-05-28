@@ -298,8 +298,22 @@ function ArcHelper.clonePush()
 		return
 	end
 
+	local magnetic = NPC.GetAbilityByIndex(ArcHelper.clone, 1)
+	local spark = NPC.GetAbilityByIndex(ArcHelper.clone, 2)
 	if not creep then return end  
 	if NPC.IsEntityInRange(ArcHelper.clone, creep, 500) then
+		if not NPC.IsRunning(ArcHelper.clone) then
+			if magnetic and Ability.IsReady(magnetic) then
+				Ability.CastPosition(magnetic, Entity.GetAbsOrigin(ArcHelper.clone))
+				ArcHelper.clonePushTick = GameRules.GetGameTime() + 1
+				return
+			end 
+			if spark and Ability.IsReady(spark) then
+				Ability.CastPosition(spark, Entity.GetAbsOrigin(creep))
+				ArcHelper.clonePushTick = GameRules.GetGameTime() + 1
+				return
+			end
+		end 
 		Player.PrepareUnitOrders(Players.GetLocal(), Enum.UnitOrder.DOTA_UNIT_ORDER_ATTACK_MOVE, creep, Entity.GetAbsOrigin(creep), ability, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, ArcHelper.clone, queue, true)
 		ArcHelper.clonePushTick = GameRules.GetGameTime() + 0.3
 	else
@@ -367,6 +381,7 @@ function ArcHelper.cloneAttack()
 
 			if invisible_candidate_blade and Ability.IsReady(invisible_candidate_blade) then
 					Ability.CastNoTarget(invisible_candidate_blade)
+					ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 				return
 			end 
 
@@ -391,6 +406,7 @@ function ArcHelper.cloneAttack()
 
 			if hex and Ability.IsReady(hex) and not NPC.HasModifier(ArcHelper.cloneAttackingTarget, "modifier_sheepstick_debuff") and not NPC.IsStunned(ArcHelper.cloneAttackingTarget) then
 				Ability.CastTarget(hex,ArcHelper.cloneAttackingTarget)
+				ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 				return
 			end 
 			if bloodthorn and Ability.IsReady(bloodthorn) and not NPC.IsSilenced(ArcHelper.cloneAttackingTarget) then
@@ -466,6 +482,7 @@ function ArcHelper.useDagger(myHero, dagger, vector)
 end
 
 function ArcHelper.useMidas(myHero)
+	if NPC.HasModifier(ArcHelper.clone,"modifier_item_silver_edge_windwalk") or NPC.HasModifier(ArcHelper.clone,"modifier_item_invisibility_edge_windwalk") then return end 
 	local midas = NPC.GetItem(myHero, "item_hand_of_midas")
 	if not midas then return end 
 	for i= 1, NPCs.Count() do

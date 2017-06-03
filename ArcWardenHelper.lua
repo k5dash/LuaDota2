@@ -13,28 +13,34 @@ ArcHelper.cloneAttackingTarget = nil
 ArcHelper.cloneTick = 0
 ArcHelper.clonePushTick = 0
 ArcHelper.clonePushCreep = nil
+ArcHelper.cloneHexTick = 0
 ArcHelper.font = Renderer.LoadFont("Tahoma", 50, Enum.FontWeight.EXTRABOLD)
 
 ArcHelper.enemyFountain = nil
 ArcHelper.dummy = nil
 ArcHelper.needTP = true
-
+ArcHelper.useOrchidDuringHex = false
 
 ArcHelper.mainTick = 0
+ArcHelper.mainHexTick = 0
 function ArcHelper.init()
 	ArcHelper.clone = nil
 	ArcHelper.cloneAttacking = false
 	ArcHelper.clonePushing =  false
 	ArcHelper.cloneAttackingTarget = nil
 	ArcHelper.cloneTick = 0
+	ArcHelper.mainTick = 0
 	ArcHelper.clonePushTick = 0
 	ArcHelper.clonePushCreep = nil
 	ArcHelper.enemyFountain = nil
+	ArcHelper.mainHexTick = 0
+	ArcHelper.cloneHexTick = 0
+	ArcHelper.useOrchidDuringHex = false
 end
 
 function ArcHelper.OnUpdate()
 	if not Menu.IsEnabled(ArcHelper.optionEnable) then return end
-	--if not Menu.IsKeyDown(ArcHelper.optionKey) then return end
+
 	local myHero = Heroes.GetLocal()
 	if myHero == nill then return end 
 	local myName = NPC.GetUnitName(myHero)
@@ -46,14 +52,14 @@ function ArcHelper.OnUpdate()
 		end 
 	end 
 
-	if not ArcHelper.enemyFountain then
-		local enemyTeamNum =2
-		if Entity.GetTeamNum(myHero) == 2 then
-			enemyTeamNum = 3
-		end 
-		ArcHelper.enemyFountain = ArcHelper.foundFountain(enemyTeamNum)
-		Log.Write(ArcHelper.enemyFountain:__tostring())
-	end 
+	-- if not ArcHelper.enemyFountain then
+	-- 	local enemyTeamNum =2
+	-- 	if Entity.GetTeamNum(myHero) == 2 then
+	-- 		enemyTeamNum = 3
+	-- 	end 
+	-- 	ArcHelper.enemyFountain = ArcHelper.foundFountain(enemyTeamNum)
+	-- 	Log.Write(ArcHelper.enemyFountain:__tostring())
+	-- end 
 
 	local ultimate = NPC.GetAbilityByIndex(myHero,3)
 	if Menu.IsKeyDownOnce(ArcHelper.optionKey) then
@@ -81,7 +87,7 @@ function ArcHelper.OnUpdate()
 		ArcHelper.clonePushCreep = ArcHelper.GetClosestLaneCreepsToPos(Input.GetWorldCursorPos(), true, true)
 	end 
 
-
+-- Find Clone Object
 	if ArcHelper.clone == nil and ultimate and Ability.GetLevel(ultimate)>0 then
 		for i= 1, NPCs.Count() do
 			local entity = NPCs.Get(i)
@@ -95,6 +101,7 @@ function ArcHelper.OnUpdate()
 		return
 	end
 
+-- Reset varibles when clone is dead
 	if not Entity.IsAlive(ArcHelper.clone) and not Ability.IsReady(ultimate) then 
 		ArcHelper.cloneAttacking = false
 		ArcHelper.clonePushing =  false
@@ -102,12 +109,11 @@ function ArcHelper.OnUpdate()
 		ArcHelper.cloneTick = 0
 		ArcHelper.clonePushTick = 0
 		ArcHelper.clonePushCreep = nil
+		ArcHelper.useOrchidDuringHex = false
 		return
 	end
 
-	if ArcHelper.clone and Entity.IsAlive(ArcHelper.clone) then 
-		ArcHelper.useMidas(ArcHelper.clone)
-	end 
+	ArcHelper.useMidas(ArcHelper.clone)
 	ArcHelper.clonePush()
 	ArcHelper.cloneAttack()
 end
@@ -204,21 +210,45 @@ function ArcHelper.mainAttack()
 				end 
 			end 
 			if hex and Ability.IsReady(hex) and not NPC.HasModifier(target, "modifier_sheepstick_debuff") and not NPC.IsStunned(target) then
-				Ability.CastTarget(hex,target)
-				return
+				if not ArcHelper.clone or not Entity.IsAlive(ArcHelper.clone) then
+					Ability.CastTarget(hex,target)
+				end 
+				if ArcHelper.clone  and Entity.IsAlive(ArcHelper.clone) and NPC.IsEntityInRange(ArcHelper.clone, target, 800) and NPC.IsEntityInRange(myHero, target, 800) then
+					local clone_hex = NPC.GetItem(ArcHelper.clone, "item_sheepstick");
+					if Ability.GetCooldownLength(clone_hex)-Ability.GetCooldownTimeLeft(clone_hex)>=0.1 then 
+						Ability.CastTarget(hex,target)
+					end  
+				end 
 			end 
-			if bloodthorn and Ability.IsReady(bloodthorn) and not NPC.IsSilenced(target) then
-				if ArcHelper.clone and Entity.IsAlive(ArcHelper) and NPC.IsEntityInRange(myHero, target, 1000) and NPC.IsEntityInRange(myHero, ArcHelper.clone, 1000) then
+
+			if hex and Ability.IsReady(hex) and NPC.HasModifier(target, "modifier_sheepstick_debuff") then
+				local modifier = NPC.GetModifier(target, "modifier_sheepstick_debuff")
+				ArcHelper.mainHexTick = Modifier.GetCreationTime(modifier) + 3.35
+				--Log.Write(ArcHelper.mainHexTick..":"..GameRules.GetGameTime())
+				if GameRules.GetGameTime() > ArcHelper.mainHexTick then 
+					Ability.CastTarget(hex,target)
+				end 
+			end 
+
+			if bloodthorn and Ability.IsReady(bloodthorn) and (not NPC.IsSilenced(target) or NPC.HasModifier(target, "modifier_sheepstick_debuff") and ArcHelper.useOrchidDuringHex) then
+				if ArcHelper.clone and Entity.IsAlive(ArcHelper.clone) and NPC.IsEntityInRange(myHero, target, 1000) and NPC.IsEntityInRange(myHero, ArcHelper.clone, 1000) then
 					local clone_bloodthorn = NPC.GetItem(ArcHelper.clone, "item_bloodthorn")
-					if not Ability.IsReady(clone_bloodthorn) then
+					if Ability.GetCooldownLength(clone_bloodthorn)-Ability.GetCooldownTimeLeft(clone_bloodthorn)>=0.1 and not NPC.IsSilenced(target)then
 						Ability.CastTarget(bloodthorn,target)
 					end  
 				else 
 					Ability.CastTarget(bloodthorn,target)
 				end 
 			end 
-			if orchid and Ability.IsReady(orchid) and not NPC.IsSilenced(target) then
-				Ability.CastTarget(orchid,target)
+			if orchid and Ability.IsReady(orchid) and (not NPC.IsSilenced(target) or NPC.HasModifier(target, "modifier_sheepstick_debuff") and ArcHelper.useOrchidDuringHex) then
+				if ArcHelper.clone and Entity.IsAlive(ArcHelper.clone) and NPC.IsEntityInRange(myHero, target, 1000) and NPC.IsEntityInRange(myHero, ArcHelper.clone, 1000) then
+					local clone_orchid = NPC.GetItem(ArcHelper.clone, "item_orchid")
+					if Ability.GetCooldownLength(clone_orchid)-Ability.GetCooldownTimeLeft(clone_orchid)>=0.1 then
+						Ability.CastTarget(orchid,target)
+					end  
+				else 
+					Ability.CastTarget(orchid,target)
+				end 
 			end 
 			if mjollnir and Ability.IsReady(mjollnir) then
 				Ability.CastTarget(mjollnir,myHero)
@@ -234,27 +264,26 @@ function ArcHelper.mainAttack()
 				return
 			end
 
-			local clone_magnetic = nil
-			if ArcHelper.clone then
-				clone_magnetic = NPC.GetAbilityByIndex(ArcHelper.clone, 1)
-			end
-
-			if Ability.IsReady(magnetic) and not NPC.HasModifier(myHero, "modifier_arc_warden_magnetic_field") and NPC.IsEntityInRange(myHero, target, 625) and (not ArcHelper.clone or ArcHelper.clone and clone_magnetic and not Ability.IsInAbilityPhase(clone_magnetic)) then
+			if Ability.IsReady(magnetic) and not NPC.HasModifier(myHero, "modifier_arc_warden_magnetic_field") and NPC.IsEntityInRange(myHero, target, NPC.GetAttackRange(myHero)) then
 				ArcHelper.mainTick = GameRules.GetGameTime() + 0.1
 				local pos = Entity.GetAbsOrigin(myHero)
-				if ArcHelper.clone and Entity.IsAlive(ArcHelper.clone) and NPC.IsEntityInRange(myHero, ArcHelper.clone, 270*2)  then
+
+				if ArcHelper.clone and Entity.IsAlive(ArcHelper.clone) and NPC.IsEntityInRange(myHero, ArcHelper.clone, 270*2) then
 					local clone_magnetic_2 = NPC.GetAbilityByIndex(ArcHelper.clone, 1)
-					if Ability.GetCooldownLength(clone_magnetic_2)-Ability.GetCooldownTimeLeft(clone_magnetic_2)<=1  then return end 
-					pos = (Entity.GetAbsOrigin(ArcHelper.clone) + Entity.GetAbsOrigin(myHero))
-					pos:SetX(pos:GetX()/2)
-					pos:SetY(pos:GetY()/2)
-					pos:SetZ(pos:GetZ()/2)
+					if Ability.GetCooldownLength(clone_magnetic_2)-Ability.GetCooldownTimeLeft(clone_magnetic_2)>1 then
+						pos = (Entity.GetAbsOrigin(ArcHelper.clone) + Entity.GetAbsOrigin(myHero))
+						pos:SetX(pos:GetX()/2)
+						pos:SetY(pos:GetY()/2)
+						pos:SetZ(pos:GetZ()/2)
+						Ability.CastPosition(magnetic,pos)
+					end 
+					return
 				end 
 				Ability.CastPosition(magnetic,pos)
 				return
 			end 
 			Player.AttackTarget(Players.GetLocal(), myHero, target) 
-			ArcHelper.mainTick = GameRules.GetGameTime() + NPC.GetAttackTime(myHero)
+			ArcHelper.mainTick = GameRules.GetGameTime() + 0.1
 		end 
 end
 
@@ -264,7 +293,7 @@ function ArcHelper.GetClosestLaneCreepsToPos(pos, isRanged, isAlly)
 	local candidate = nil
 	for i= 1, NPCs.Count() do
 		local entity = NPCs.Get(i)
-		if entity and NPC.IsLaneCreep(entity) and Entity.IsAlive(entity) and (isRanged and NPC.IsRanged(entity) or not isRanged and not NPC.IsRanged(entity)) and (isAlly and Entity.IsSameTeam(ArcHelper.clone, entity) or not isAlly and not Entity.IsSameTeam(ArcHelper.clone, entity)) then
+		if entity and NPC.IsLaneCreep(entity) and not NPC.IsWaitingToSpawn(entity) and Entity.IsAlive(entity) and (isRanged and NPC.IsRanged(entity) or not isRanged and not NPC.IsRanged(entity)) and (isAlly and Entity.IsSameTeam(ArcHelper.clone, entity) or not isAlly and not Entity.IsSameTeam(ArcHelper.clone, entity)) then
 			local creepPos = Entity.GetAbsOrigin(entity)
 			local dist = creepPos -  pos
 			local len = dist:Length2D()
@@ -302,17 +331,17 @@ function ArcHelper.clonePush()
 	local spark = NPC.GetAbilityByIndex(ArcHelper.clone, 2)
 	if not creep then return end  
 	if NPC.IsEntityInRange(ArcHelper.clone, creep, 500) then
-		if not NPC.IsRunning(ArcHelper.clone) then
+		if not NPC.IsRunning(ArcHelper.clone) and NPC.IsAttacking(creep) then
 			if magnetic and Ability.IsReady(magnetic) then
 				Ability.CastPosition(magnetic, Entity.GetAbsOrigin(ArcHelper.clone))
 				ArcHelper.clonePushTick = GameRules.GetGameTime() + 1
 				return
 			end 
-			if spark and Ability.IsReady(spark) then
-				Ability.CastPosition(spark, Entity.GetAbsOrigin(creep))
-				ArcHelper.clonePushTick = GameRules.GetGameTime() + 1
-				return
-			end
+			-- if spark and Ability.IsReady(spark) then
+			-- 	Ability.CastPosition(spark, Entity.GetAbsOrigin(creep))
+			-- 	ArcHelper.clonePushTick = GameRules.GetGameTime() + 1
+			-- 	return
+			-- end
 		end 
 		Player.PrepareUnitOrders(Players.GetLocal(), Enum.UnitOrder.DOTA_UNIT_ORDER_ATTACK_MOVE, creep, Entity.GetAbsOrigin(creep), ability, Enum.PlayerOrderIssuer.DOTA_ORDER_ISSUER_PASSED_UNIT_ONLY, ArcHelper.clone, queue, true)
 		ArcHelper.clonePushTick = GameRules.GetGameTime() + 0.3
@@ -367,6 +396,15 @@ function ArcHelper.cloneAttack()
 			if not NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, 2500) then
 				ArcHelper.cloneAttackingTarget =  nil
 			end 
+			if ArcHelper.cloneAttackingTarget then
+				local hits = ArcHelper.calculateHits(ArcHelper.clone, ArcHelper.cloneAttackingTarget)
+				local hitsDuringHex = 7/NPC.GetAttackTime(ArcHelper.clone)*2
+				Log.Write(hits..","..hitsDuringHex)
+				if not NPC.IsEntityInRange(myHero,ArcHelper.cloneAttackingTarget, 800) then
+					hitsDuringHex = hitsDuringHex /2
+				end 
+				ArcHelper.useOrchidDuringHex =  hitsDuringHex <= hits*0.5
+			end 
 		end 
 		if ArcHelper.cloneAttackingTarget then
 			if dagger and Ability.IsReady(dagger) then
@@ -393,7 +431,7 @@ function ArcHelper.cloneAttack()
 				end 
 			end 
 			if NPC.HasModifier(ArcHelper.clone,"modifier_item_silver_edge_windwalk") or NPC.HasModifier(ArcHelper.clone,"modifier_item_invisibility_edge_windwalk") then 
-				if NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, 300) then
+				if NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, 700) then
 					Player.AttackTarget(Players.GetLocal(), ArcHelper.clone, ArcHelper.cloneAttackingTarget) 
 					ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 					return
@@ -409,10 +447,20 @@ function ArcHelper.cloneAttack()
 				ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 				return
 			end 
-			if bloodthorn and Ability.IsReady(bloodthorn) and not NPC.IsSilenced(ArcHelper.cloneAttackingTarget) then
+
+			if hex and Ability.IsReady(hex) and NPC.HasModifier(ArcHelper.cloneAttackingTarget, "modifier_sheepstick_debuff") then
+				local modifier = NPC.GetModifier(ArcHelper.cloneAttackingTarget, "modifier_sheepstick_debuff")
+				ArcHelper.cloneHexTick = Modifier.GetCreationTime(modifier) + 3.35
+				--Log.Write(ArcHelper.cloneHexTick..":"..GameRules.GetGameTime())
+				if GameRules.GetGameTime() > ArcHelper.cloneHexTick then 
+					Ability.CastTarget(hex,ArcHelper.cloneAttackingTarget)
+				end 
+			end 
+
+			if bloodthorn and Ability.IsReady(bloodthorn) and (not NPC.IsSilenced(ArcHelper.cloneAttackingTarget) or NPC.HasModifier(ArcHelper.cloneAttackingTarget, "modifier_sheepstick_debuff") and ArcHelper.useOrchidDuringHex) then
 				Ability.CastTarget(bloodthorn,ArcHelper.cloneAttackingTarget)
 			end 
-			if orchid and Ability.IsReady(orchid) and not NPC.IsSilenced(ArcHelper.cloneAttackingTarget) then
+			if orchid and Ability.IsReady(orchid) and (not NPC.IsSilenced(ArcHelper.cloneAttackingTarget) or NPC.HasModifier(ArcHelper.cloneAttackingTarget, "modifier_sheepstick_debuff") and ArcHelper.useOrchidDuringHex) then
 				Ability.CastTarget(orchid,ArcHelper.cloneAttackingTarget)
 			end 
 			if mjollnir and Ability.IsReady(mjollnir) then
@@ -460,11 +508,11 @@ function ArcHelper.OnDraw()
 		ArcHelper.init()
 		return 
 	end 
-	-- local myHero = Heroes.GetLocal()
+	local myHero = Heroes.GetLocal()
 	-- local modifiers = NPC.GetModifiers(myHero)
 	-- for i = 1,#modifiers do
 	-- 	local name = Modifier.GetName(modifiers[i])
-	-- 	Log.Write(name)
+	-- 	Log.Write(name..Modifier.GetDuration(modifiers[i]))
 	-- end
 	ArcHelper.DrawCloneMidasMsg()
 	ArcHelper.DrawCloneSwitchMsg()
@@ -482,6 +530,7 @@ function ArcHelper.useDagger(myHero, dagger, vector)
 end
 
 function ArcHelper.useMidas(myHero)
+	if not ArcHelper.clone or not Entity.IsAlive(ArcHelper.clone) then return end 
 	if NPC.HasModifier(ArcHelper.clone,"modifier_item_silver_edge_windwalk") or NPC.HasModifier(ArcHelper.clone,"modifier_item_invisibility_edge_windwalk") then return end 
 	local midas = NPC.GetItem(myHero, "item_hand_of_midas")
 	if not midas then return end 
@@ -496,15 +545,29 @@ function ArcHelper.useMidas(myHero)
 	end
 end
 
+function ArcHelper.calculateHits(myHero, enemy)
+	if not myHero or not enemy then return end 
+	local trueDamage = NPC.GetDamageMultiplierVersus(myHero, enemy) * (NPC.GetTrueDamage(myHero) * NPC.GetArmorDamageMultiplier(enemy))
+    local pos = NPC.GetAbsOrigin(enemy)
+    local x, y, visible = Renderer.WorldToScreen(pos)
+    local healthLeft = Entity.GetHealth(enemy)
+    local hitCount = math.ceil(healthLeft/trueDamage)
+    return hitCount
+end 
+
 function ArcHelper.DrawCloneMidasMsg()
 	if not ArcHelper.clone then return end 
 	local midas = NPC.GetItem(ArcHelper.clone,	"item_hand_of_midas")
+	local bot = NPC.GetItem(ArcHelper.clone,	"item_travel_boots")
+
 	if not midas then return end
 	local w, h = Renderer.GetScreenSize()
 	--Renderer.SetDrawColor(255, 255, 255)
 	Renderer.DrawTextCentered(ArcHelper.font, w-200, 100, "Midas:"..math.floor(Ability.GetCooldownTimeLeft(midas)), 1)
-end 
 
+	if not bot then return end
+	Renderer.DrawTextCentered(ArcHelper.font, w-200, 150, "Bot:"..math.floor(Ability.GetCooldownTimeLeft(bot)), 1)
+end 
 function ArcHelper.DrawCloneSwitchMsg()
 	if not ArcHelper.clone then return end 
 	if not Entity.IsAlive(ArcHelper.clone) then return end 

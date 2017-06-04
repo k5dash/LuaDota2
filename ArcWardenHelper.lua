@@ -210,7 +210,7 @@ function ArcHelper.mainAttack()
 				end 
 			end 
 			if hex and Ability.IsReady(hex) and not NPC.HasModifier(target, "modifier_sheepstick_debuff") and not NPC.IsStunned(target) then
-				if not ArcHelper.clone or not Entity.IsAlive(ArcHelper.clone) then
+				if not ArcHelper.clone or not Entity.IsAlive(ArcHelper.clone) or not(NPC.IsEntityInRange(ArcHelper.clone, target, 800) and NPC.IsEntityInRange(myHero, target, 800)) then
 					Ability.CastTarget(hex,target)
 				end 
 				if ArcHelper.clone  and Entity.IsAlive(ArcHelper.clone) and NPC.IsEntityInRange(ArcHelper.clone, target, 800) and NPC.IsEntityInRange(myHero, target, 800) then
@@ -403,7 +403,8 @@ function ArcHelper.cloneAttack()
 				if not NPC.IsEntityInRange(myHero,ArcHelper.cloneAttackingTarget, 800) then
 					hitsDuringHex = hitsDuringHex /2
 				end 
-				ArcHelper.useOrchidDuringHex =  hitsDuringHex <= hits*0.5
+				ArcHelper.useOrchidDuringHex =  hitsDuringHex <= hits*0.8
+				Log.Write("hitsDuringHex:"..hitsDuringHex.."  hits*0.5:"..hits*0.8)
 			end 
 		end 
 		if ArcHelper.cloneAttackingTarget then

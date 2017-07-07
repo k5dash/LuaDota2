@@ -112,7 +112,7 @@ function ArcHelper.OnUpdate()
 	end
 
 -- Reset varibles when clone is dead
-	if not Entity.IsAlive(ArcHelper.clone) and not Ability.IsReady(ultimate) then 
+	if ArcHelper.clone and not Entity.IsAlive(ArcHelper.clone) and not Ability.IsReady(ultimate) then 
 		ArcHelper.cloneAttacking = false
 		ArcHelper.clonePushing =  false
 		ArcHelper.cloneAttackingTarget = nil
@@ -331,7 +331,7 @@ function ArcHelper.GetClosestLaneCreepsToPos(pos, isRanged, isAlly)
 end 
 
 function ArcHelper.clonePush()
-	if not Entity.IsAlive(ArcHelper.clone) then return end 
+	if not ArcHelper.clone or not Entity.IsAlive(ArcHelper.clone) then return end 
 	if not ArcHelper.clonePushing then return end 
 	if GameRules.GetGameTime() < ArcHelper.clonePushTick then return end 
 	if NPC.IsChannellingAbility(ArcHelper.clone) then return end 
@@ -398,7 +398,7 @@ function ArcHelper.closerToFountain(myHero, creep)
 end
 
 function ArcHelper.cloneAttack()
-	if not Entity.IsAlive(ArcHelper.clone) then return end 
+	if not ArcHelper.clone or not Entity.IsAlive(ArcHelper.clone) then return end 
 	ArcHelper.autoDefend(ArcHelper.clone)
 
 	if GameRules.GetGameTime() < ArcHelper.cloneTick then return end 
@@ -415,13 +415,20 @@ function ArcHelper.cloneAttack()
 	local silver_edge = NPC.GetItem(ArcHelper.clone,"item_silver_edge")
 	local invisible_candidate_blade = shadowblade
 	local hurrican = NPC.GetItem(ArcHelper.clone,"item_hurricane_pike")
+	local dragon_lance = NPC.GetItem(ArcHelper.clone,"item_dragon_lance")
+
+
+	local myRange = NPC.GetAttackRange(ArcHelper.clone)
+	if dragon_lance or hurrican then
+		myRange = myRange + 140
+	end 
 
 	if silver_edge then
 		invisible_candidate_blade = silver_edge
 	end
 
 	if ArcHelper.cloneAttacking then 		
-		if not Entity.IsAlive(ArcHelper.cloneAttackingTarget) or not NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, 2500) then
+		if not ArcHelper.cloneAttackingTarget or not Entity.IsAlive(ArcHelper.cloneAttackingTarget) or not NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, 2500) then
 			ArcHelper.cloneAttackingTarget = Input.GetNearestHeroToCursor(Entity.GetTeamNum(myHero), Enum.TeamType.TEAM_ENEMY)
 			if not ArcHelper.cloneAttackingTarget  then return end
 			if not NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, 2500) then
@@ -529,7 +536,7 @@ function ArcHelper.cloneAttack()
 				main_magnetic = NPC.GetAbilityByIndex(myHero, 1)
 			end
 
-			if Ability.IsReady(magnetic) and not NPC.HasModifier(ArcHelper.clone, "modifier_arc_warden_magnetic_field") and NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, 625) and not Ability.IsInAbilityPhase(main_magnetic) then
+			if Ability.IsReady(magnetic) and not NPC.HasModifier(ArcHelper.clone, "modifier_arc_warden_magnetic_field") and NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, myRange) and not Ability.IsInAbilityPhase(main_magnetic) then
 				ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 				local pos = Entity.GetAbsOrigin(ArcHelper.clone)
 				if NPC.IsEntityInRange(myHero, ArcHelper.clone, 270*2) then

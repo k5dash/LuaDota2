@@ -102,7 +102,7 @@ function CourierController.getPlayerHeroMap()
 
 			if not CourierController.players[Player.GetPlayerID(owner)] then
 				--Log.Write(Player.GetPlayerID(owner)..":"..NPC.GetUnitName(entity))
-				CourierController.players[Player.GetPlayerID(owner)] = Menu.AddOption({"Hero Specific", "Courier"}, string.upper(string.sub(NPC.GetUnitName(entity),15)),  "Lock Courier Usage")
+				CourierController.players[Player.GetPlayerID(owner)] = Menu.AddOption({"Utility", "Courier"}, string.upper(string.sub(NPC.GetUnitName(entity),15)),  "Lock Courier Usage")
 			end
 		end 
 	end

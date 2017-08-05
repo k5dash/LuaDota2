@@ -64,7 +64,7 @@ function CourierController.controlCourier()
 				CourierController.forceTranfer[courier] = true
 			end 
 			if CourierController.forceTranfer[courier] == true then
-				if NPC.IsEntityInRange(myHero, courier, 400) then
+				if NPC.IsEntityInRange(myHero, courier, 600) then
 					CourierController.forceTranfer[courier] = false
 				else 
 					Ability.CastNoTarget(transfer)
@@ -96,7 +96,7 @@ function CourierController.getPlayerHeroMap()
 			CourierController.heroesPlayerMap[NPC.GetUnitName(entity)] = Player.GetPlayerID(owner)
 
 			if not CourierController.players[Player.GetPlayerID(owner)] then
-				Log.Write(Player.GetPlayerID(owner)..":"..NPC.GetUnitName(entity))
+				--Log.Write(Player.GetPlayerID(owner)..":"..NPC.GetUnitName(entity))
 				CourierController.players[Player.GetPlayerID(owner)] = Menu.AddOption({"Hero Specific", "Courier"}, string.upper(string.sub(NPC.GetUnitName(entity),15)),  "Lock Courier Usage")
 			end
 		end 

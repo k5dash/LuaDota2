@@ -1,7 +1,7 @@
 local CourierController = {}
 
-CourierController.optionEnable = Menu.AddOption({"Hero Specific", "Courier"}, "Enable",  "Combo")
-CourierController.optionKey = Menu.AddKeyOption({"Hero Specific", "Courier"}, "Key", Enum.ButtonCode.KEY_F)
+CourierController.optionEnable = Menu.AddOption({"Utility", "Courier"}, "Enable",  "Combo")
+CourierController.optionKey = Menu.AddKeyOption({"Utility", "Courier"}, "Key", Enum.ButtonCode.KEY_F)
 
 CourierController.courierArray= {}
 CourierController.tick = 0
@@ -39,6 +39,7 @@ end
 function CourierController.findCourier()
 	if GameRules.GetGameTime() < CourierController.tick then return end 
 	local myHero = Heroes.GetLocal()
+
 	CourierController.courierArray = {}
 	for i= 1, NPCs.Count() do
 		local entity = NPCs.Get(i) 
@@ -80,7 +81,7 @@ end
 function CourierController.getPlayerHeroMap()
 	if CourierController.players[0] then return end 
 	local myHero = Heroes.GetLocal()
-	if GameRules.GetGameTime() < 30 then return end
+	if GameRules.GetServerGameState()~=5 then return end
 	for i = 0,10 do
 		if CourierController.players[i] then
 			Menu.RemoveOption(CourierController.players[i])

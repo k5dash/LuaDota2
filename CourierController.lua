@@ -68,7 +68,11 @@ function CourierController.controlCourier()
 				if NPC.IsEntityInRange(myHero, courier, 600) then
 					CourierController.forceTranfer[courier] = false
 				else 
-					Ability.CastNoTarget(transfer)
+					if Entity.IsAlive(myHero) then
+						Ability.CastNoTarget(transfer)
+					else 
+						CourierController.forceTranfer[courier] = false
+					end 
 				end
 			end
 			if courierEnt and Entity.IsHero(courierEnt) and CourierController.mutedHeroes[NPC.GetUnitName(courierEnt)] and not CourierController.forceTranfer[courier] then

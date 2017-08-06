@@ -64,16 +64,24 @@ function CourierController.controlCourier()
 			if state == Enum.CourierState.COURIER_STATE_DELIVERING_ITEMS and courierEnt == myHero then
 				CourierController.forceTranfer[courier] = true
 			end 
+
+			if CourierController.forceTranfer[courier] == true then
+				if state ~= Enum.CourierState.COURIER_STATE_DELIVERING_ITEMS and courierEnt == myHero then
+					CourierController.forceTranfer[courier] = false
+				end 
+			end 
+
 			if CourierController.forceTranfer[courier] == true then
 				if NPC.IsEntityInRange(myHero, courier, 600) then
 					CourierController.forceTranfer[courier] = false
-				else 
-					if Entity.IsAlive(myHero) then
+				elseif Entity.IsAlive(myHero) then
+					if courierEnt and courierEnt ~= myHero then
 						Ability.CastNoTarget(transfer)
-					else 
-						CourierController.forceTranfer[courier] = false
+						Log.Write("some one trying to use courier")
 					end 
-				end
+				else 
+					CourierController.forceTranfer[courier] = false
+				end 
 			end
 			if courierEnt and Entity.IsHero(courierEnt) and CourierController.mutedHeroes[NPC.GetUnitName(courierEnt)] and not CourierController.forceTranfer[courier] then
         		Ability.CastNoTarget(goBase)

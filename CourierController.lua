@@ -1,6 +1,7 @@
 local CourierController = {}
 
-CourierController.optionEnable = Menu.AddOption({"Utility", "Courier"}, "Enable",  "Combo")
+CourierController.optionEnable = Menu.AddOption({"Utility", "Courier"}, "Enable",  "Courier")
+CourierController.MuteEnable = Menu.AddOption({"Utility", "Courier"}, "Use Mute Filter",  "Mute")
 CourierController.optionKey = Menu.AddKeyOption({"Utility", "Courier"}, "Key", Enum.ButtonCode.KEY_F)
 
 CourierController.courierArray= {}
@@ -126,7 +127,7 @@ function CourierController.getMutedHeroes()
 		if entity and Entity.IsHero(entity) and Entity.IsSameTeam(myHero, entity) then
 			local owner = Entity.GetOwner(entity)
 			local ownerID = Hero.GetPlayerID(entity)
-			if Player.IsMuted(owner) or (CourierController.players[ownerID] and Menu.IsEnabled(CourierController.players[ownerID])) then
+			if (Menu.IsEnabled(CourierController.MuteEnable) and Player.IsMuted(owner)) or (CourierController.players[ownerID] and Menu.IsEnabled(CourierController.players[ownerID])) then
 				CourierController.mutedHeroes[NPC.GetUnitName(entity)] = true
 				CourierController.mutedHeroesLength = CourierController.mutedHeroesLength +1
 			end

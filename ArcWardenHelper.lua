@@ -1,9 +1,11 @@
+-- Version 1.08
 local ArcHelper= {}
-ArcHelper.optionEnable = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Enable", "Arc Warden Help Scrip")
+ArcHelper.optionEnable = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Enable", "Arc Warden Help Script")
 ArcHelper.optionKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Clone Combo", Enum.ButtonCode.KEY_P)
 ArcHelper.optionMainKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Main Hero Combo", Enum.ButtonCode.KEY_P)
 ArcHelper.pushKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Clone Push", Enum.ButtonCode.KEY_P)
 ArcHelper.useHurricanKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Use Hurrican", Enum.ButtonCode.KEY_C)
+ArcHelper.optionAutoUseCloneMidas = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Auto Use Clone Midas", "Arc Warden Help Script")
 
 ArcHelper.cache = {}
 
@@ -123,7 +125,7 @@ function ArcHelper.OnUpdate()
 		return
 	end
 
-	ArcHelper.useMidas(ArcHelper.clone)
+	if Menu.IsEnabled(ArcHelper.optionAutoUseCloneMidas) then ArcHelper.useMidas(ArcHelper.clone) end
 	ArcHelper.clonePush()
 	ArcHelper.cloneAttack()
 end
@@ -341,7 +343,7 @@ function ArcHelper.clonePush()
 	local bot2 = NPC.GetItem(ArcHelper.clone, "item_travel_boots_2")
 
 	if bot2 then bot = bot2 end
-	ArcHelper.useMidas(ArcHelper.clone)
+	if Menu.IsEnabled(ArcHelper.optionAutoUseCloneMidas) then ArcHelper.useMidas(ArcHelper.clone) end
 	
 	local creep =  ArcHelper.GetClosestLaneCreepsToPos(Entity.GetAbsOrigin(ArcHelper.clone), false, true)
 
@@ -589,13 +591,42 @@ function ArcHelper.useMidas(myHero)
 	if not midas then return end 
 	for i= 1, NPCs.Count() do
 		local entity = NPCs.Get(i) 
-		if entity and not Entity.IsSameTeam(myHero, entity) and (NPC.IsCreep(entity) or NPC.IsLaneCreep(entity) or NPC.IsNeutral(entity)) and not NPC.IsAncient(entity) and NPC.IsEntityInRange(myHero, entity, 1000) then
-			if Ability.IsReady(midas) then
-				Ability.CastTarget(midas, entity)
-				return
-			end 
-		end 
+		if ArcHelper.isMidasableCreep(myHero, entity) and Ability.IsReady(midas) then
+			Ability.CastTarget(midas, entity)
+			return
+		end
 	end
+end
+
+function ArcHelper.isMidasableCreep(myHero, entity)
+	if entity and 
+		not Entity.IsSameTeam(myHero, entity) 
+		and (NPC.IsCreep(entity) 
+		or NPC.IsLaneCreep(entity) 
+		or NPC.IsNeutral(entity)) 
+		and not NPC.IsAncient(entity) 
+		and NPC.IsEntityInRange(myHero, entity, 1000) then
+			local name = NPC.GetUnitName(entity)
+			local w, h = Renderer.GetScreenSize()
+			if name == "npc_dota_neutral_black_dragon" 
+				or name == "npc_dota_neutral_black_drake"
+				or name == "npc_dota_neutral_black_dragon"
+				or name == "npc_dota_neutral_blue_dragonspawn_sorcerer"
+				or name == "npc_dota_neutral_blue_dragonspawn_overseer"
+				or name == "npc_dota_neutral_granite_golem"
+				or name == "npc_dota_neutral_elder_jungle_stalker"
+				or name == "npc_dota_neutral_prowler_acolyte"
+				or name == "npc_dota_neutral_prowler_shaman"
+				or name == "npc_dota_neutral_rock_golem"
+				or name == "npc_dota_neutral_small_thunder_lizard"
+				or name == "npc_dota_neutral_jungle_stalker"
+				or name == "npc_dota_neutral_big_thunder_lizard"
+				or name == "npc_dota_roshan" then
+					return false
+			end
+			return true
+	end 
+	return false
 end
 
 function ArcHelper.calculateHits(myHero, enemy)
@@ -637,13 +668,15 @@ function ArcHelper.DrawCloneMidasMsg()
 	local midas = NPC.GetItem(ArcHelper.clone,	"item_hand_of_midas")
 	local bot = NPC.GetItem(ArcHelper.clone,	"item_travel_boots")
 
-	if not midas then return end
-	local w, h = Renderer.GetScreenSize()
-	--Renderer.SetDrawColor(255, 255, 255)
-	Renderer.DrawTextCentered(ArcHelper.font, w-200, 100, "Midas:"..math.floor(Ability.GetCooldownTimeLeft(midas)), 1)
+	if midas then
+		local w, h = Renderer.GetScreenSize()
+		--Renderer.SetDrawColor(255, 255, 255)
+		Renderer.DrawTextCentered(ArcHelper.font, w-200, 100, "Midas:"..math.floor(Ability.GetCooldownTimeLeft(midas)), 1)
+	end
 
-	if not bot then return end
-	Renderer.DrawTextCentered(ArcHelper.font, w-200, 150, "Bot:"..math.floor(Ability.GetCooldownTimeLeft(bot)), 1)
+	if bot then
+		Renderer.DrawTextCentered(ArcHelper.font, w-200, 150, "Bot:"..math.floor(Ability.GetCooldownTimeLeft(bot)), 1)
+	end
 end 
 function ArcHelper.DrawCloneSwitchMsg()
 	if not ArcHelper.clone then return end 

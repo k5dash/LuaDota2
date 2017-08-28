@@ -1,4 +1,4 @@
--- Version 1.08
+-- Version 1.09
 local ArcHelper= {}
 ArcHelper.optionEnable = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Enable", "Arc Warden Help Script")
 ArcHelper.optionKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Clone Combo", Enum.ButtonCode.KEY_P)
@@ -667,10 +667,9 @@ function ArcHelper.DrawCloneMidasMsg()
 	if not ArcHelper.clone then return end 
 	local midas = NPC.GetItem(ArcHelper.clone,	"item_hand_of_midas")
 	local bot = NPC.GetItem(ArcHelper.clone,	"item_travel_boots")
-
+	local w, h = Renderer.GetScreenSize()
+	
 	if midas then
-		local w, h = Renderer.GetScreenSize()
-		--Renderer.SetDrawColor(255, 255, 255)
 		Renderer.DrawTextCentered(ArcHelper.font, w-200, 100, "Midas:"..math.floor(Ability.GetCooldownTimeLeft(midas)), 1)
 	end
 
@@ -678,6 +677,7 @@ function ArcHelper.DrawCloneMidasMsg()
 		Renderer.DrawTextCentered(ArcHelper.font, w-200, 150, "Bot:"..math.floor(Ability.GetCooldownTimeLeft(bot)), 1)
 	end
 end 
+
 function ArcHelper.DrawCloneSwitchMsg()
 	if not ArcHelper.clone then return end 
 	if not Entity.IsAlive(ArcHelper.clone) then return end 

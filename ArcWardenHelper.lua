@@ -1,10 +1,11 @@
--- Version 1.10.1
+-- Version 1.11
 local ArcHelper= {}
 ArcHelper.optionEnable = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Enable", "Arc Warden Help Script")
 ArcHelper.optionKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Clone Combo", Enum.ButtonCode.KEY_P)
 ArcHelper.optionMainKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Main Hero Combo", Enum.ButtonCode.KEY_P)
 ArcHelper.pushKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Clone Push", Enum.ButtonCode.KEY_P)
 ArcHelper.useHurricanKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Use Hurrican", Enum.ButtonCode.KEY_C)
+ArcHelper.optionUseCloneDiffusalBlade = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Auto Use Clone Diffusal Blade", "Arc Warden Help Script")
 ArcHelper.optionAutoUseCloneMidas = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Auto Use Clone Midas", "Arc Warden Help Script")
 
 ArcHelper.cache = {}
@@ -152,6 +153,7 @@ function ArcHelper.autoDefend(myHero)
     local bloodthorn = NPC.GetItem(myHero,"item_bloodthorn")
     local hex = NPC.GetItem(myHero, "item_sheepstick")
     local hurrican = NPC.GetItem(myHero,"item_hurricane_pike")
+
     if not orchid and not bloodthorn and not hex and not hurrican then return end
     for i= 1, Heroes.Count() do
         local enemy = Heroes.Get(i)
@@ -418,7 +420,11 @@ function ArcHelper.cloneAttack()
 	local invisible_candidate_blade = shadowblade
 	local hurrican = NPC.GetItem(ArcHelper.clone,"item_hurricane_pike")
 	local dragon_lance = NPC.GetItem(ArcHelper.clone,"item_dragon_lance")
+	local diffusal1 = NPC.GetItem(ArcHelper.clone,"item_diffusal_blade")
+	local diffusal2 = NPC.GetItem(ArcHelper.clone,"item_diffusal_blade_2")
+	local diffusal = (Menu.IsEnabled(ArcHelper.optionUseCloneDiffusalBlade) and diffusal1 or diffusal2 or nil)
 
+	if diffusal and Item.GetCurrentCharges(diffusal) == 0 then diffusal = nil end
 
 	local myRange = NPC.GetAttackRange(ArcHelper.clone)
 	if dragon_lance or hurrican then
@@ -471,6 +477,7 @@ function ArcHelper.cloneAttack()
 					return
 				end
 			end
+			
 			if NPC.HasModifier(ArcHelper.clone,"modifier_item_silver_edge_windwalk") or NPC.HasModifier(ArcHelper.clone,"modifier_item_invisibility_edge_windwalk") then
 				if NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, 700) then
 					Player.AttackTarget(Players.GetLocal(), ArcHelper.clone, ArcHelper.cloneAttackingTarget)
@@ -483,11 +490,21 @@ function ArcHelper.cloneAttack()
 				return
 			end
 
+			if diffusal and Ability.IsReady(diffusal) and not NPC.HasModifier(ArcHelper.cloneAttackingTarget, "modifier_item_diffusal_blade_slow") and 
+				not NPC.HasModifier(ArcHelper.cloneAttackingTarget, "modifier_sheepstick_debuff") and not NPC.IsStunned(ArcHelper.cloneAttackingTarget)then
+				
+				Log.Write("diffu")
+				ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
+				Ability.CastTarget(diffusal,ArcHelper.cloneAttackingTarget)
+				return
+			end
+
 			if hurrican and Ability.IsReady(hurrican) and ArcHelper.isTarget(ArcHelper.clone,ArcHelper.cloneAttackingTarget, 1800) and not NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, 500) and ArcHelper.useHurrican then
 				ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 				Ability.CastTarget(hurrican,ArcHelper.clone)
 				return
 			end
+
 
 			if hex and Ability.IsReady(hex) and not NPC.HasModifier(ArcHelper.cloneAttackingTarget, "modifier_sheepstick_debuff") and not NPC.IsStunned(ArcHelper.cloneAttackingTarget) then
 				Ability.CastTarget(hex,ArcHelper.cloneAttackingTarget)

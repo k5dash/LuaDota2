@@ -1,4 +1,4 @@
--- Version 1.11
+-- Version 1.12
 local ArcHelper= {}
 ArcHelper.optionEnable = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Enable", "Arc Warden Help Script")
 ArcHelper.optionKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Clone Combo", Enum.ButtonCode.KEY_P)
@@ -464,14 +464,14 @@ function ArcHelper.cloneAttack()
 				return
 			end
 
-			if invisible_candidate_blade and Ability.IsReady(invisible_candidate_blade) then
+			if invisible_candidate_blade and Ability.IsReady(invisible_candidate_blade) and ArcHelper.isEnougthMana(ArcHelper.clone, invisible_candidate_blade) then
 					Ability.CastNoTarget(invisible_candidate_blade)
 					ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 				return
 			end
 
 			if NPC.IsLinkensProtected(ArcHelper.cloneAttackingTarget) then
-				if Ability.IsReady(flux) then
+				if Ability.IsReady(flux) and ArcHelper.isEnougthMana(ArcHelper.clone, flux) then
 					ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 					Ability.CastTarget(flux,ArcHelper.cloneAttackingTarget)
 					return
@@ -499,21 +499,27 @@ function ArcHelper.cloneAttack()
 				return
 			end
 
-			if hurrican and Ability.IsReady(hurrican) and ArcHelper.isTarget(ArcHelper.clone,ArcHelper.cloneAttackingTarget, 1800) and not NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, 500) and ArcHelper.useHurrican then
+			if hurrican and Ability.IsReady(hurrican) and ArcHelper.isTarget(ArcHelper.clone,ArcHelper.cloneAttackingTarget, 1800) 
+				and not NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, 500) and ArcHelper.useHurrican then
+				
 				ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 				Ability.CastTarget(hurrican,ArcHelper.clone)
 				return
 			end
 
 
-			if hex and Ability.IsReady(hex) and not NPC.HasModifier(ArcHelper.cloneAttackingTarget, "modifier_sheepstick_debuff") and not NPC.IsStunned(ArcHelper.cloneAttackingTarget) then
+			if hex and Ability.IsReady(hex) and not NPC.HasModifier(ArcHelper.cloneAttackingTarget, "modifier_sheepstick_debuff") 
+				and not NPC.IsStunned(ArcHelper.cloneAttackingTarget) then
+				
 				Ability.CastTarget(hex,ArcHelper.cloneAttackingTarget)
 				Log.Write("hex1")
 				ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 				return
 			end
 
-			if hex and Ability.IsReady(hex) and NPC.HasModifier(ArcHelper.cloneAttackingTarget, "modifier_sheepstick_debuff") then
+			if hex and Ability.IsReady(hex) and NPC.HasModifier(ArcHelper.cloneAttackingTarget, "modifier_sheepstick_debuff") 
+				and ArcHelper.isEnougthMana(ArcHelper.clone, hex) then
+				
 				Log.Write("hex2")
 				local modifier = NPC.GetModifier(ArcHelper.cloneAttackingTarget, "modifier_sheepstick_debuff")
 				ArcHelper.cloneHexTick = Modifier.GetCreationTime(modifier) + 3.35
@@ -537,13 +543,13 @@ function ArcHelper.cloneAttack()
 				return
 			end
 
-			if Ability.IsReady(flux) then
+			if Ability.IsReady(flux) and ArcHelper.isEnougthMana(ArcHelper.clone, flux) then
 				ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 				Ability.CastTarget(flux,ArcHelper.cloneAttackingTarget)
 				Log.Write("flux")
 				return
 			end
-			if Ability.IsReady(spark) then
+			if Ability.IsReady(spark) and ArcHelper.isEnougthMana(ArcHelper.clone, spark) then
 				ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 				Ability.CastPosition(spark,ArcHelper.PredictPosition(ArcHelper.cloneAttackingTarget))
 				Log.Write("spark")
@@ -555,7 +561,11 @@ function ArcHelper.cloneAttack()
 				main_magnetic = NPC.GetAbilityByIndex(myHero, 1)
 			end
 
-			if Ability.IsReady(magnetic) and not NPC.HasModifier(ArcHelper.clone, "modifier_arc_warden_magnetic_field") and NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, myRange) and not Ability.IsInAbilityPhase(main_magnetic) then
+			if Ability.IsReady(magnetic) and not NPC.HasModifier(ArcHelper.clone, "modifier_arc_warden_magnetic_field") 
+				and NPC.IsEntityInRange(ArcHelper.cloneAttackingTarget, ArcHelper.clone, myRange) 
+				and not Ability.IsInAbilityPhase(main_magnetic)
+				and ArcHelper.isEnougthMana(ArcHelper.clone, magnetic) then
+				
 				ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
 				local pos = Entity.GetAbsOrigin(ArcHelper.clone)
 				if NPC.IsEntityInRange(myHero, ArcHelper.clone, 270*2) then
@@ -729,7 +739,6 @@ function ArcHelper.DrawCloneSwitchMsg()
 
 end
 
-
 function ArcHelper.PredictPosition(enemy)
 	if NPC.IsRunning(enemy) then
 		return ArcHelper.processHero(enemy, 2.3)
@@ -753,4 +762,9 @@ function ArcHelper.processHero(enemy, duration)
     local origin = NPC.GetAbsOrigin(enemy)
     return origin + direction
 end
+
+function ArcHelper.isEnougthMana(myHero, ability)
+	return NPC.GetMana(myHero) > Ability.GetManaCost(ability)
+end
+
 return ArcHelper

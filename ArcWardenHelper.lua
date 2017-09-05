@@ -1,12 +1,14 @@
--- Version 1.12
+-- Version 1.13
 local ArcHelper= {}
 ArcHelper.optionEnable = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Enable", "Arc Warden Help Script")
-ArcHelper.optionKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Clone Combo", Enum.ButtonCode.KEY_P)
-ArcHelper.optionMainKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Main Hero Combo", Enum.ButtonCode.KEY_P)
-ArcHelper.pushKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Clone Push", Enum.ButtonCode.KEY_P)
-ArcHelper.useHurricanKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden"}, "Use Hurrican", Enum.ButtonCode.KEY_C)
-ArcHelper.optionUseCloneDiffusalBlade = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Auto Use Clone Diffusal Blade", "Arc Warden Help Script")
-ArcHelper.optionAutoUseCloneMidas = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Auto Use Clone Midas", "Arc Warden Help Script")
+ArcHelper.optionKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden", "Hotkeys"}, "Clone Combo", Enum.ButtonCode.KEY_P)
+ArcHelper.optionStopCloneAttackKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden", "Hotkeys"}, "Stop clone attacking", Enum.ButtonCode.KEY_P)
+ArcHelper.optionMainKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden", "Hotkeys"}, "Main Hero Combo", Enum.ButtonCode.KEY_P)
+ArcHelper.pushKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden", "Hotkeys"}, "Clone Push", Enum.ButtonCode.KEY_P)
+
+ArcHelper.useHurricanKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden", "Items Usage"}, "Use Hurrican", Enum.ButtonCode.KEY_C)
+ArcHelper.optionUseCloneDiffusalBlade = Menu.AddOption({ "Hero Specific","Arc Warden", "Items Usage"}, "Auto Use Clone Diffusal Blade", "Arc Warden Help Script")
+ArcHelper.optionAutoUseCloneMidas = Menu.AddOption({ "Hero Specific","Arc Warden", "Items Usage"}, "Auto Use Clone Midas", "Arc Warden Help Script")
 
 ArcHelper.cache = {}
 
@@ -59,6 +61,11 @@ function ArcHelper.OnUpdate()
 		if GameRules.GetGameTime() > ArcHelper.mainTick then
 			ArcHelper.mainAttack()
 		end
+	end
+	
+	if Menu.IsKeyDown(ArcHelper.optionStopCloneAttackKey) then
+		ArcHelper.cloneAttacking = false
+		Player.HoldPosition(Players.GetLocal(), ArcHelper.clone, queue)
 	end
 
 	-- if not ArcHelper.enemyFountain then
@@ -557,8 +564,9 @@ function ArcHelper.cloneAttack()
 				Ability.CastTarget(orchid,ArcHelper.cloneAttackingTarget)
 			end
 
-			if mjollnir and Ability.IsReady(mjollnir) and ArcHelper.isEnougthMana(ArcHelper.clone, mjolnir) then
+			if mjollnir and Ability.IsReady(mjollnir) and ArcHelper.isEnougthMana(ArcHelper.clone, mjollnir) then
 				ArcHelper.cloneTick = GameRules.GetGameTime() + 0.1
+				Log.Write("clone mjolnir")
 				Ability.CastTarget(mjollnir,ArcHelper.clone)
 				return
 			end
@@ -731,6 +739,7 @@ end
 function ArcHelper.DrawCloneSwitchMsg()
 	if not ArcHelper.clone then return end
 	if not Entity.IsAlive(ArcHelper.clone) then return end
+	local pike = NPC.GetItem(ArcHelper.clone,	"item_hurricane_pike")
 	local w, h = Renderer.GetScreenSize()
 	Renderer.SetDrawColor(255, 0, 255)
 	if ArcHelper.cloneAttacking then
@@ -741,7 +750,7 @@ function ArcHelper.DrawCloneSwitchMsg()
 	if ArcHelper.clonePushing then
 		Renderer.DrawTextCentered(ArcHelper.font, w / 2, h / 2 + 350, "PUSHING", 1)
 	end
-	if ArcHelper.useHurrican then
+	if pike and ArcHelper.useHurrican then
 		Renderer.DrawTextCentered(ArcHelper.font, w / 2, h / 2 + 400, "Use Hurrican", 1)
 	end
 	-- if ArcHelper.dummy then

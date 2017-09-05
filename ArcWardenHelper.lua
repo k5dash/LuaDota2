@@ -1,4 +1,4 @@
--- Version 1.13
+-- Version 1.14
 local ArcHelper= {}
 ArcHelper.optionEnable = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Enable", "Arc Warden Help Script")
 ArcHelper.optionKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden", "Hotkeys"}, "Clone Combo", Enum.ButtonCode.KEY_P)
@@ -9,6 +9,7 @@ ArcHelper.pushKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden", "Hotkeys"}
 ArcHelper.useHurricanKey = Menu.AddKeyOption({ "Hero Specific","Arc Warden", "Items Usage"}, "Use Hurrican", Enum.ButtonCode.KEY_C)
 ArcHelper.optionUseCloneDiffusalBlade = Menu.AddOption({ "Hero Specific","Arc Warden", "Items Usage"}, "Auto Use Clone Diffusal Blade", "Arc Warden Help Script")
 ArcHelper.optionAutoUseCloneMidas = Menu.AddOption({ "Hero Specific","Arc Warden", "Items Usage"}, "Auto Use Clone Midas", "Arc Warden Help Script")
+ArcHelper.optionAutoDefend = Menu.AddOption({ "Hero Specific","Arc Warden"}, "Clone autodefend", "Autoorchid/autohex etc.")
 
 ArcHelper.cache = {}
 
@@ -410,7 +411,10 @@ end
 
 function ArcHelper.cloneAttack()
 	if not ArcHelper.clone or not Entity.IsAlive(ArcHelper.clone) then return end
-	ArcHelper.autoDefend(ArcHelper.clone)
+	
+	if Menu.IsEnabled(ArcHelper.optionAutoDefend) then
+		ArcHelper.autoDefend(ArcHelper.clone)
+	end
 
 	if GameRules.GetGameTime() < ArcHelper.cloneTick then return end
 	local myHero = Heroes.GetLocal()
